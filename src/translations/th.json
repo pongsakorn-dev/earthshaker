@@ -1,0 +1,49 @@
+{
+  "app": {
+    "title": "รายงานความเสียหายจากแผ่นดินไหว",
+    "description": "รายงานความเสียหายของห้องจากแผ่นดินไหว"
+  },
+  "form": {
+    "roomNumber": "หมายเลขห้อง",
+    "residentName": "ชื่อผู้อยู่อาศัย",
+    "residenceType": "ประเภทการอยู่อาศัย",
+    "damages": "ความเสียหาย",
+    "damageDetails": "รายละเอียดความเสียหาย",
+    "images": "รูปภาพ",
+    "imageDetails": "รายละเอียดรูปภาพ",
+    "room": "ห้อง",
+    "damageLocation": "ตำแหน่งความเสียหาย",
+    "damageDescription": "คำอธิบายความเสียหาย",
+    "generateReport": "สร้างรายงาน PDF",
+    "addMore": "เพิ่มรูปภาพ",
+    "addImages": "เพิ่มรูปภาพ",
+    "addDamage": "เพิ่มจุดความเสียหายใหม่",
+    "noDamages": "ยังไม่มีจุดความเสียหายที่ระบุ คลิกปุ่มด้านล่างเพื่อเพิ่ม",
+    "requiredField": "จำเป็นต้องกรอกข้อมูล"
+  },
+  "language": {
+    "english": "English",
+    "thai": "ไทย"
+  },
+  "rooms": {
+    "livingRoom": "ห้องนั่งเล่น",
+    "bedroom": "ห้องนอน",
+    "kitchen": "ห้องครัว",
+    "bathroom": "ห้องน้ำ",
+    "other": "อื่นๆ"
+  },
+  "damageType": {
+    "water": "ระบบน้ำ",
+    "electric": "ระบบไฟฟ้า",
+    "other": "อื่นๆ"
+  },
+  "residenceType": {
+    "owner": "เจ้าของห้อง",
+    "renter": "ผู้เช่า"
+  },
+  "damageExtent": {
+    "minor": "เล็กน้อย",
+    "moderate": "ปานกลาง",
+    "severe": "รุนแรง"
+  }
+} 

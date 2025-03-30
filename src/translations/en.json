@@ -1,0 +1,49 @@
+{
+  "app": {
+    "title": "Earthquake Damage Report",
+    "description": "Report room damage from earthquake"
+  },
+  "form": {
+    "roomNumber": "Room Number",
+    "residentName": "Resident Name",
+    "residenceType": "Residence Type",
+    "damages": "Damages",
+    "damageDetails": "Damage Details",
+    "images": "Images",
+    "imageDetails": "Image Details",
+    "room": "Room",
+    "damageLocation": "Damage Location",
+    "damageDescription": "Damage Description",
+    "generateReport": "Generate PDF Report",
+    "addMore": "Add More Images",
+    "addImages": "Add Images",
+    "addDamage": "Add New Damage",
+    "noDamages": "No damages added yet. Click the button below to add damage.",
+    "requiredField": "This field is required"
+  },
+  "language": {
+    "english": "English",
+    "thai": "Thai"
+  },
+  "rooms": {
+    "livingRoom": "Living Room",
+    "bedroom": "Bedroom",
+    "kitchen": "Kitchen",
+    "bathroom": "Bathroom",
+    "other": "Other"
+  },
+  "damageType": {
+    "water": "Water System",
+    "electric": "Electrical System",
+    "other": "Other"
+  },
+  "residenceType": {
+    "owner": "Owner",
+    "renter": "Renter"
+  },
+  "damageExtent": {
+    "minor": "Minor",
+    "moderate": "Moderate",
+    "severe": "Severe"
+  }
+} 
