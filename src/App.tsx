@@ -325,41 +325,58 @@ function App() {
       // ตั้งชื่อไฟล์
       const fileName = `${projectKey}_${formData.roomNumber}.pdf`;
       
-      // ตรวจสอบว่าเป็น mobile browser หรือไม่
-      const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      // ตรวจสอบว่าเป็นอุปกรณ์และระบบปฏิบัติการอะไร
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+      const isAndroid = /Android/.test(navigator.userAgent);
+      const isMobile = isIOS || isAndroid || /Mobi|mini|IEMobile/i.test(navigator.userAgent);
       
-      if (isMobileBrowser) {
-        // สำหรับ mobile browsers เราจะเปิดในแท็บใหม่
-        const newWindow = window.open(pdfDataUri, '_blank');
+      // สร้าง blob สำหรับการดาวน์โหลดในทุกแพลตฟอร์ม
+      const byteString = atob(pdfDataUri.split(',')[1]);
+      const arrayBuffer = new ArrayBuffer(byteString.length);
+      const uint8Array = new Uint8Array(arrayBuffer);
+      
+      for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+      }
+      
+      const blob = new Blob([uint8Array], { type: 'application/pdf' });
+      const blobUrl = URL.createObjectURL(blob);
+      
+      if (isMobile) {
+        // เปิดในหน้าต่างใหม่สำหรับอุปกรณ์มือถือ
+        window.open(blobUrl, '_blank');
         
-        // ถ้า popup blocker ทำงาน
-        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
-          console.error('Popup blocked - trying to open directly');
-          // ลองเปิดโดยตรง
-          window.location.href = pdfDataUri;
+        let saveInstructions = '';
+        
+        if (isIOS) {
+          saveInstructions = `
+            1. กดปุ่มแชร์ (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น 📤) ที่อยู่ด้านล่างกลางของหน้าจอ
+            2. เลือก "Save to Files" (บันทึกลงในไฟล์)
+            3. เลือกตำแหน่งที่ต้องการจัดเก็บแล้วกด "Save"
+          `;
+        } else if (isAndroid) {
+          saveInstructions = `
+            1. กดปุ่มเมนู (⋮) ที่มุมบนขวาของหน้าจอ
+            2. เลือก "Download" (ดาวน์โหลด)
+            3. หรือใช้ปุ่มดาวน์โหลด (⬇️) ถ้ามีแสดงบนหน้าจอ
+          `;
+        } else {
+          saveInstructions = 'กดปุ่มแชร์หรือเมนูตัวเลือกในเบราว์เซอร์ของคุณ แล้วเลือกบันทึกไฟล์';
         }
         
         setNotification({
           open: true,
-          message: `PDF ถูกสร้างแล้ว โปรดกดปุ่มแชร์/แบ่งปัน และเลือกบันทึกไฟล์`,
+          message: `PDF ถูกสร้างแล้ว! วิธีบันทึก: ${saveInstructions}`,
           severity: 'success',
         });
+        
+        // ทำความสะอาด URL หลังจากเปิดในหน้าต่างใหม่
+        setTimeout(() => {
+          URL.revokeObjectURL(blobUrl);
+        }, 1000);
       } else {
-        // สำหรับ desktop browsers
+        // สำหรับ desktop browsers - ดาวน์โหลดโดยตรง
         try {
-          // สร้าง blob จาก data URI
-          const byteString = atob(pdfDataUri.split(',')[1]);
-          const arrayBuffer = new ArrayBuffer(byteString.length);
-          const uint8Array = new Uint8Array(arrayBuffer);
-          
-          for (let i = 0; i < byteString.length; i++) {
-            uint8Array[i] = byteString.charCodeAt(i);
-          }
-          
-          const blob = new Blob([uint8Array], { type: 'application/pdf' });
-          const blobUrl = URL.createObjectURL(blob);
-          
-          // ใช้ anchor element เพื่อดาวน์โหลด
           const a = document.createElement('a');
           a.href = blobUrl;
           a.download = fileName;
@@ -381,13 +398,18 @@ function App() {
         } catch (error) {
           console.error('Error downloading PDF:', error);
           // Fallback ใช้การเปิดในแท็บใหม่
-          window.open(pdfDataUri, '_blank');
+          window.open(blobUrl, '_blank');
           
           setNotification({
             open: true,
-            message: `PDF ถูกสร้างแล้ว โปรดบันทึกไฟล์จากหน้าใหม่`,
+            message: `PDF ถูกสร้างแล้ว โปรดกดปุ่มบันทึกในหน้าต่างใหม่ที่เปิดขึ้น`,
             severity: 'success',
           });
+          
+          // ทำความสะอาด URL หลังจากเปิดในหน้าต่างใหม่
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+          }, 1000);
         }
       }
     } catch (error) {
@@ -547,12 +569,12 @@ function App() {
         {notification.open && (
           <div className={`fixed bottom-4 right-4 p-4 rounded-md shadow-lg ${
             notification.severity === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
-            <div className="flex justify-between items-center">
-              <span>{notification.message}</span>
+          } max-w-md`}>
+            <div className="flex justify-between items-start">
+              <span className="whitespace-pre-line text-sm">{notification.message}</span>
               <button 
                 onClick={() => setNotification({ ...notification, open: false })} 
-                className="ml-4 text-current hover:text-gray-700"
+                className="ml-4 text-current hover:text-gray-700 flex-shrink-0"
               >
                 ×
               </button>
