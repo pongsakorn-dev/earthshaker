@@ -278,7 +278,7 @@ const DamagePage = ({
     )}
     
     {/* ลายเซ็นขนาดใหญ่ (แสดงในหน้าสุดท้ายเท่านั้น) */}
-    {pageNumber === totalPages && (
+    {/* {pageNumber === totalPages && (
       <View style={styles.signature}>
         <Text>ลงชื่อ</Text>
         <Text>{'\n'}</Text>
@@ -287,7 +287,7 @@ const DamagePage = ({
         <Text style={{ fontSize: 14, marginTop: 5 }}>ผู้รายงานความเสียหาย</Text>
         <Text style={styles.signatureDate}>วันที่ ________/________/________</Text>
       </View>
-    )}
+    )} */}
     
     {/* แสดงเลขหน้า */}
     <Text style={styles.paginator}>หน้า {pageNumber} / {totalPages}</Text>
