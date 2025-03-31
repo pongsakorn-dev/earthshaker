@@ -13,6 +13,14 @@ import { Button } from './components/ui/button';
 import { Label } from './components/ui/label';
 import { Card } from './components/ui/card';
 
+// เพิ่มการประกาศ type สำหรับ window global
+declare global {
+  interface Window {
+    MSStream?: any;
+    saveAs?: (blob: Blob, fileName: string) => void;
+  }
+}
+
 // Map สำหรับเก็บข้อมูลชื่อโครงการจาก URL parameter
 const projectNameMapping: Record<string, string> = {
   'rhythm': 'Rhythm Asok',
@@ -314,25 +322,79 @@ function App() {
       const project = getProjectNameFromURL();
       const projectKey = project?.key || 'unknown';
       
-      // ดาวน์โหลด PDF โดยตรงด้วยชื่อไฟล์ที่กำหนด
+      // ตั้งชื่อไฟล์
       const fileName = `${projectKey}_${formData.roomNumber}.pdf`;
-      const a = document.createElement('a');
-      a.href = pdfDataUri;
-      a.download = fileName;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
       
-      setNotification({
-        open: true,
-        message: `PDF ${fileName} has been downloaded successfully`,
-        severity: 'success',
-      });
+      // ตรวจสอบว่าเป็น mobile browser หรือไม่
+      const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      
+      if (isMobileBrowser) {
+        // สำหรับ mobile browsers เราจะเปิดในแท็บใหม่
+        const newWindow = window.open(pdfDataUri, '_blank');
+        
+        // ถ้า popup blocker ทำงาน
+        if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+          console.error('Popup blocked - trying to open directly');
+          // ลองเปิดโดยตรง
+          window.location.href = pdfDataUri;
+        }
+        
+        setNotification({
+          open: true,
+          message: `PDF ถูกสร้างแล้ว โปรดกดปุ่มแชร์/แบ่งปัน และเลือกบันทึกไฟล์`,
+          severity: 'success',
+        });
+      } else {
+        // สำหรับ desktop browsers
+        try {
+          // สร้าง blob จาก data URI
+          const byteString = atob(pdfDataUri.split(',')[1]);
+          const arrayBuffer = new ArrayBuffer(byteString.length);
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          for (let i = 0; i < byteString.length; i++) {
+            uint8Array[i] = byteString.charCodeAt(i);
+          }
+          
+          const blob = new Blob([uint8Array], { type: 'application/pdf' });
+          const blobUrl = URL.createObjectURL(blob);
+          
+          // ใช้ anchor element เพื่อดาวน์โหลด
+          const a = document.createElement('a');
+          a.href = blobUrl;
+          a.download = fileName;
+          a.style.display = 'none';
+          document.body.appendChild(a);
+          a.click();
+          
+          // ทำความสะอาด
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(blobUrl);
+          }, 100);
+          
+          setNotification({
+            open: true,
+            message: `PDF ${fileName} ถูกดาวน์โหลดเรียบร้อยแล้ว`,
+            severity: 'success',
+          });
+        } catch (error) {
+          console.error('Error downloading PDF:', error);
+          // Fallback ใช้การเปิดในแท็บใหม่
+          window.open(pdfDataUri, '_blank');
+          
+          setNotification({
+            open: true,
+            message: `PDF ถูกสร้างแล้ว โปรดบันทึกไฟล์จากหน้าใหม่`,
+            severity: 'success',
+          });
+        }
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       setNotification({
         open: true,
-        message: `Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        message: `เกิดข้อผิดพลาดในการสร้าง PDF: ${error instanceof Error ? error.message : 'ข้อผิดพลาดที่ไม่ทราบสาเหตุ'}`,
         severity: 'error',
       });
     } finally {
