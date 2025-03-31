@@ -133,6 +133,29 @@ const styles = StyleSheet.create({
     left: 30,
     fontSize: 12,
   },
+  reporter: {
+    position: 'absolute',
+    bottom: 30,
+    right: 30,
+    fontSize: 12,
+    textAlign: 'right',
+    fontFamily: 'THSarabunNew-Bold',
+  },
+  miniSignature: {
+    position: 'absolute',
+    bottom: 50,
+    right: 30,
+    textAlign: 'right',
+    fontSize: 12,
+  },
+  miniSignatureLine: {
+    width: 150,
+    height: 1,
+    backgroundColor: 'black',
+    marginTop: 3,
+    marginBottom: 3,
+    alignSelf: 'flex-end',
+  }
 });
 
 // สร้างหน้า PDF สำหรับข้อมูลทั่วไป
@@ -168,6 +191,15 @@ const InfoPage = ({ formData, pageNumber, totalPages }: { formData: FormData, pa
     
     {/* แสดงเลขหน้า */}
     <Text style={styles.paginator}>หน้า {pageNumber} / {totalPages}</Text>
+    
+    {/* แสดงชื่อและลายเซ็นผู้รายงานที่มุมล่างขวา */}
+    <View style={styles.miniSignature}>
+      <Text>ลงชื่อ</Text>
+      <Text>{'\n'}</Text>
+      <View style={styles.miniSignatureLine} />
+      <Text style={{ textAlign: 'center' }}>({formData.residentName})</Text>
+      <Text>ผู้รายงานความเสียหาย</Text>
+    </View>
   </Page>
 );
 
@@ -245,18 +277,29 @@ const DamagePage = ({
       </View>
     )}
     
-    {/* ลายเซ็น (แสดงในหน้าสุดท้ายเท่านั้น) */}
+    {/* ลายเซ็นขนาดใหญ่ (แสดงในหน้าสุดท้ายเท่านั้น) */}
     {pageNumber === totalPages && (
       <View style={styles.signature}>
-        <Text>ลงชื่อผู้รายงานความเสียหาย</Text>
+        <Text>ลงชื่อ</Text>
+        <Text>{'\n'}</Text>
         <View style={styles.signatureLine} />
         <Text style={styles.signatureName}>({formData.residentName})</Text>
+        <Text style={{ fontSize: 14, marginTop: 5 }}>ผู้รายงานความเสียหาย</Text>
         <Text style={styles.signatureDate}>วันที่ ________/________/________</Text>
       </View>
     )}
     
     {/* แสดงเลขหน้า */}
     <Text style={styles.paginator}>หน้า {pageNumber} / {totalPages}</Text>
+    
+    {/* แสดงชื่อและลายเซ็นผู้รายงานที่มุมล่างขวา */}
+    <View style={styles.miniSignature}>
+      <Text>ลงชื่อ</Text>
+      <Text>{'\n'}</Text>
+      <View style={styles.miniSignatureLine} />
+      <Text style={{ textAlign: 'center' }}>({formData.residentName})</Text>
+      <Text>ผู้รายงานความเสียหาย</Text>
+    </View>
   </Page>
 );
 
