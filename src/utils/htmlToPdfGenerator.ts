@@ -1,6 +1,6 @@
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
-import { FormData, DamageDetail } from '../types';
+import { FormData } from '../types';
 
 interface GeneratePdfOptions {
   formData: FormData;
@@ -68,35 +68,47 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
       .pdf-page {
         background-color: white;
         margin-bottom: 20px;
-        padding: 20px; /* ลดขนาด padding */
+        padding: 20px;
         position: relative; /* เพื่อรองรับลายน้ำ */
         word-break: keep-all; /* ป้องกันการตัดคำภาษาไทย */
         hyphens: none; /* ป้องกันการใช้ยัติภังค์ */
-        font-size: 14px; /* ลดขนาดฟอนต์เล็กน้อยเพื่อให้ข้อความพอดีกับพื้นที่ */
+        font-size: 18px; /* ปรับขนาดฟอนต์ทั่วไปลง */
       }
       .pdf-watermark {
         position: absolute;
-        top: 50%;
         left: 50%;
-        transform: translate(-50%, -50%) rotate(-30deg);
-        font-size: 150px;
-        color: rgba(200, 200, 200, 0.15);
+        transform: translate(-50%, -50%) rotate(45deg); /* เปลี่ยนมุมการหมุนให้ตรงกับ PDF */
+        color: rgba(150, 150, 150, 0.25); /* เพิ่มความทึบแสงและปรับความเข้มของสี */
         font-weight: bold;
         user-select: none;
         pointer-events: none;
-        z-index: 0;
+        z-index: 5; /* เพิ่ม z-index ให้อยู่ด้านบนสุด */
         font-family: Arial, sans-serif;
         white-space: nowrap;
-        letter-spacing: 10px;
-        width: 100%;
+        width: 150%; /* เพิ่มความกว้างเพื่อรองรับข้อความยาว */
         text-align: center;
+      }
+      
+      .pdf-watermark-main {
+        font-size: 120px;
+        letter-spacing: 8px;
+      }
+      
+      .pdf-watermark-room {
+        font-size: 90px;
+        letter-spacing: 4px;
+      }
+      
+      .pdf-watermark-note {
+        font-size: 40px;
+        letter-spacing: 2px;
       }
       .pdf-header {
         color: #2e7d32;
-        font-size: 24px;
+        font-size: 30px; /* ปรับขนาดหัวข้อลง */
         font-weight: bold;
         text-align: center;
-        margin-bottom: 10px; /* ลดระยะห่าง */
+        margin-bottom: 15px; /* เพิ่มระยะห่าง */
         position: relative; /* เพื่อให้อยู่ข้างบนลายน้ำ */
         z-index: 1;
       }
@@ -106,64 +118,75 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
         border-radius: 5px;
         margin-bottom: 15px; /* ลดระยะห่าง */
         position: relative;
-        z-index: 1;
+        z-index: 2;
+        background-color: rgba(255, 255, 255, 0.85); /* เพิ่มพื้นหลังโปร่งแสงเพื่อให้เห็นลายน้ำ */
       }
       .pdf-info-row {
-        margin-bottom: 8px; /* ลดระยะห่าง */
+        margin-bottom: 12px; /* เพิ่มระยะห่าง */
+        font-size: 18px; /* ปรับขนาดฟอนต์ทั่วไปลง */
       }
       .pdf-info-label {
         font-weight: bold;
         display: inline-block;
-        width: 170px;
+        width: 200px; /* เพิ่มความกว้างของ label */
         white-space: nowrap;
       }
       .pdf-section-header {
         background-color: #2e7d32;
         color: white;
-        padding: 5px 10px;
-        margin: 15px 0 8px 0; /* ลดระยะห่าง */
+        padding: 10px 12px; /* เพิ่มพื้นที่ */
+        margin: 20px 0 12px 0; /* เพิ่มระยะห่าง */
         text-align: center;
         position: relative;
-        z-index: 1;
+        z-index: 2;
+        font-size: 28px; /* เพิ่มขนาดฟอนต์อีก */
       }
       .pdf-damage-item {
         margin-bottom: 12px; /* ลดระยะห่าง */
         padding-bottom: 12px; /* ลดระยะห่าง */
         border-bottom: 1px solid #ddd;
         position: relative;
-        z-index: 1;
+        z-index: 2;
+        background-color: rgba(255, 255, 255, 0.9); /* เพิ่มพื้นหลังโปร่งแสงเพื่อให้เห็นลายน้ำ */
       }
       .pdf-damage-title {
         color: #2e7d32;
-        font-size: 18px;
+        font-size: 32px; /* เพิ่มขนาดหัวข้อความเสียหายให้ใหญ่ขึ้น */
         font-weight: bold;
-        margin-bottom: 8px; /* ลดระยะห่าง */
+        margin-bottom: 15px; /* เพิ่มระยะห่าง */
+        position: relative;
+        z-index: 2;
       }
       .pdf-damage-detail {
-        margin-bottom: 4px; /* ลดระยะห่าง */
+        margin-bottom: 12px; /* เพิ่มระยะห่าง */
+        font-size: 26px; /* เพิ่มขนาดรายละเอียดความเสียหายให้ใหญ่ขึ้น */
+        position: relative;
+        z-index: 2;
       }
       .pdf-damage-detail-label {
         font-weight: bold;
         display: inline-block;
-        width: 170px;
+        width: 220px; /* เพิ่มความกว้างของ label */
         white-space: nowrap;
       }
       .pdf-images {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px; /* ลดระยะห่าง */
-        margin-top: 8px; /* ลดระยะห่าง */
+        gap: 15px; /* เพิ่มระยะห่าง */
+        margin-top: 15px; /* เพิ่มระยะห่าง */
       }
       .pdf-image {
-        width: 180px; /* ลดขนาดรูปเล็กน้อย */
-        height: 140px; /* ลดขนาดรูปเล็กน้อย */
+        width: 380px; /* เพิ่มขนาดรูปให้ใหญ่ขึ้นมาก */
+        height: 280px; /* เพิ่มขนาดรูปให้ใหญ่ขึ้นมาก */
         object-fit: cover;
       }
       .pdf-signature {
-        margin-top: 30px; /* ลดระยะห่าง */
+        margin-top: 40px; /* เพิ่มระยะห่าง */
         text-align: center;
         position: relative;
-        z-index: 1;
+        z-index: 2;
+        font-size: 22px; /* เพิ่มขนาดฟอนต์อีก */
+        background-color: rgba(255, 255, 255, 0.9); /* เพิ่มพื้นหลังโปร่งแสงเพื่อให้เห็นลายน้ำ */
       }
       .pdf-signature-line {
         width: 250px;
@@ -187,31 +210,33 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
     const content = document.createElement('div');
     content.className = 'pdf-page';
     
-    // เพิ่มลายน้ำ
+    // เพิ่มลายน้ำ - ชื่อโครงการ
     const watermark = document.createElement('div');
-    watermark.className = 'pdf-watermark';
+    watermark.className = 'pdf-watermark pdf-watermark-main';
     watermark.textContent = 'RHYTHM';
+    watermark.style.top = '50%';
     content.appendChild(watermark);
     
-    // เพิ่มลายน้ำเพิ่มเติมบนและล่าง
-    const watermarkTop = document.createElement('div');
-    watermarkTop.className = 'pdf-watermark';
-    watermarkTop.textContent = 'RHYTHM';
-    watermarkTop.style.top = '25%';
-    content.appendChild(watermarkTop);
+    // เพิ่มลายน้ำ - เลขห้อง
+    const watermarkRoom = document.createElement('div');
+    watermarkRoom.className = 'pdf-watermark pdf-watermark-room';
+    watermarkRoom.textContent = formData.roomNumber;
+    watermarkRoom.style.top = '60%';
+    content.appendChild(watermarkRoom);
     
-    const watermarkBottom = document.createElement('div');
-    watermarkBottom.className = 'pdf-watermark';
-    watermarkBottom.textContent = 'RHYTHM';
-    watermarkBottom.style.top = '75%';
-    content.appendChild(watermarkBottom);
+    // เพิ่มลายน้ำ - ข้อความ
+    const watermarkNote = document.createElement('div');
+    watermarkNote.className = 'pdf-watermark pdf-watermark-note';
+    watermarkNote.textContent = 'ใช้สำหรับการรายงานความเสียหายเท่านั้น';
+    watermarkNote.style.top = '70%';
+    content.appendChild(watermarkNote);
     
     // หัวข้อ
     const header = document.createElement('div');
     header.className = 'pdf-header';
     
     // ใช้ innerHTML แทน textContent เพื่อให้สามารถจัดรูปแบบได้
-    header.innerHTML = `บันทึกความเสียหายของห้องชุด<br/><span style="font-size: 32px; display: block; margin-top: 10px;">เลขที่ ${formData.roomNumber}</span>`;
+    header.innerHTML = `บันทึกความเสียหายของห้องชุด<br/><span style="font-size: 36px; display: block; margin-top: 10px;">เลขที่ ${formData.roomNumber}</span>`;
     
     content.appendChild(header);
     
@@ -412,15 +437,20 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
       });
       
       // เริ่มสร้าง PDF
-      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+        putOnlyUsedFonts: true
+      });
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pageHeight = pdf.internal.pageSize.getHeight();
       
       // กำหนดขอบกระดาษสำหรับการเข้าเล่ม
-      const leftMargin = 25; // ขอบซ้ายกว้างขึ้นสำหรับการเข้าเล่ม
-      const rightMargin = 15;
-      const topMargin = 15;
-      const bottomMargin = 20;
+      const leftMargin = 20; // ลดขอบซ้ายลงเล็กน้อยเพื่อให้มีพื้นที่สำหรับเนื้อหามากขึ้น
+      const rightMargin = 10; // ลดขอบขวาลงเพื่อให้มีพื้นที่สำหรับเนื้อหามากขึ้น
+      const topMargin = 12; // ลดขอบบนลงเพื่อให้มีพื้นที่สำหรับเนื้อหามากขึ้น
+      const bottomMargin = 15; // ลดขอบล่างลงเพื่อให้มีพื้นที่สำหรับเนื้อหามากขึ้น
       
       // คำนวณพื้นที่ใช้งานจริง
       const contentWidth = pdfWidth - leftMargin - rightMargin;
@@ -431,14 +461,46 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
         const textColor = pdf.getTextColor ? pdf.getTextColor() : 0; // ใช้สีดำถ้าไม่มีเมธอด getTextColor
         
         // ตั้งค่าสำหรับลายน้ำ
-        pdf.setTextColor(200, 200, 200);
+        pdf.setTextColor(150, 150, 150);
+        
+        try {
+          // เพิ่มความทึบแสงด้วย GState ถ้าใช้ได้
+          pdf.setGState && pdf.setGState(new (pdf.GState as any)({ opacity: 0.3 }));
+        } catch (e) {
+          console.log('GState not supported, continuing without opacity settings');
+        }
+        
+        // ลายน้ำชั้นที่ 1 - ชื่อโครงการขนาดใหญ่ตรงกลาง
         pdf.setFontSize(80);
+        pdf.text('RHYTHM', pdfWidth/2, pageHeight/2, { 
+          align: 'center', 
+          angle: 45
+        });
         
-        // เพิ่มข้อความลายน้ำตรงกลาง
-        pdf.text('RHYTHM', pdfWidth/2, pageHeight/2, { align: 'center' });
+        // ลายน้ำชั้นที่ 2 - เลขห้อง
+        pdf.setFontSize(60);
+        pdf.text(formData.roomNumber, pdfWidth/2, pageHeight/2 + 15, { 
+          align: 'center', 
+          angle: 45
+        });
         
-        // คืนค่าสีกลับมา
+        // ลายน้ำชั้นที่ 3 - ข้อความการใช้งาน
+        pdf.setFontSize(25);
+        pdf.text(`ใช้สำหรับการรายงานความเสียหายเท่านั้น`, pdfWidth/2, pageHeight/2 + 30, { 
+          align: 'center', 
+          angle: 45
+        });
+        
+        // คืนค่าสีและความทึบแสงกลับมา
         pdf.setTextColor(typeof textColor === 'number' ? textColor : 0);
+        
+        try {
+          // คืนค่าความทึบแสง
+          pdf.setGState && pdf.setGState(new (pdf.GState as any)({ opacity: 1.0 }));
+        } catch (e) {
+          // ไม่ทำอะไรถ้าไม่รองรับ
+        }
+        
         pdf.setFontSize(12); // คืนค่าขนาดตัวอักษรกลับมา
       };
       
@@ -489,6 +551,14 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
       
       // 3. แปลงแต่ละรายการความเสียหายแยกกัน
       for (let i = 0; i < formData.damages.length; i++) {
+        // ขึ้นหน้าใหม่สำหรับแต่ละจุดความเสียหาย (ยกเว้นจุดแรกที่อาจจะอยู่ต่อจากหัวข้อได้)
+        if (i > 0) {
+          pdf.addPage();
+          currentPage++;
+          currentY = topMargin;
+          addWatermark(); // เพิ่มลายน้ำในหน้าใหม่
+        }
+        
         const damageItemElement = document.querySelectorAll('.pdf-damage-item')[i];
         
         // คัดลอกองค์ประกอบออกมาเพื่อวัดขนาด
@@ -507,7 +577,7 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
         
         const damageHeight = (damageCanvas.height * contentWidth) / damageCanvas.width;
         
-        // ตรวจสอบว่ารายการจะล้นหน้าหรือไม่
+        // ตรวจสอบว่ารายการจะล้นหน้าหรือไม่ (ในกรณีที่ภาพรวมของจุดเสียหายใหญ่มาก)
         if (currentY + damageHeight > pageHeight - bottomMargin) {
           // ถ้าล้นหน้า ให้ขึ้นหน้าใหม่
           pdf.addPage();
@@ -561,6 +631,7 @@ export const generatePdf = async ({ formData, lang, translations }: GeneratePdfO
       document.body.removeChild(pdfContent);
       
       console.log('HTML to PDF conversion completed successfully with proper pagination');
+      console.log(`Total pages generated: ${currentPage}`);
       return pdfDataUri;
       
     } catch (error) {

@@ -4,9 +4,14 @@
     "description": "Report room damage from earthquake"
   },
   "form": {
+    "basicInfo": "Basic Information",
+    "projectName": "Project Name",
     "roomNumber": "Room Number",
     "residentName": "Resident Name",
     "residenceType": "Residence Type",
+    "damageSection": "Water & Electrical Damages",
+    "crackSection": "Cracks Damages",
+    "crackDescription": "Specify the location and upload images of cracks",
     "damages": "Damages",
     "damageDetails": "Damage Details",
     "images": "Images",
@@ -18,6 +23,7 @@
     "addMore": "Add More Images",
     "addImages": "Add Images",
     "addDamage": "Add New Damage",
+    "addCrack": "Add New Crack",
     "noDamages": "No damages added yet. Click the button below to add damage.",
     "requiredField": "This field is required"
   },
@@ -35,6 +41,7 @@
   "damageType": {
     "water": "Water System",
     "electric": "Electrical System",
+    "crack": "Crack",
     "other": "Other"
   },
   "residenceType": {

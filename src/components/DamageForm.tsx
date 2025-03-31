@@ -92,6 +92,15 @@ const DamageForm: React.FC<DamageFormProps> = ({
             
             <div className="flex items-center space-x-2">
               <Checkbox 
+                id={`crack-${damage.id}`}
+                checked={damage.type === 'crack'} 
+                onCheckedChange={(checked) => handleDamageTypeChange('crack', checked === true)}
+              />
+              <Label htmlFor={`crack-${damage.id}`}>{t('damageType.crack')}</Label>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
                 id={`other-${damage.id}`}
                 checked={damage.type === 'other'} 
                 onCheckedChange={(checked) => handleDamageTypeChange('other', checked === true)}
@@ -109,7 +118,7 @@ const DamageForm: React.FC<DamageFormProps> = ({
                 onChange={(e) => onUpdate(damage.id, { room: e.target.value as RoomType })}
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               >
-                <option value="">-- {t('form.selectRoom')} --</option>
+                <option value="">{t('Select Room')}</option>
                 {roomOptions.map(option => (
                   <option key={option.value} value={option.value}>
                     {option.label}

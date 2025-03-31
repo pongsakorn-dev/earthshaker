@@ -1,4 +1,4 @@
-export type DamageType = 'water' | 'electric' | 'other';
+export type DamageType = 'water' | 'electric' | 'crack' | 'other';
 
 export type ResidenceType = 'owner' | 'renter';
 
@@ -30,6 +30,7 @@ export interface FormData {
   roomNumber: string;
   residentName: string;
   residenceType: ResidenceType;
+  projectName: string;
   damages: DamageDetail[];
 }
 

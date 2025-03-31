@@ -7,17 +7,50 @@ import './utils/i18n';  // Import i18n config
 import LanguageSelector from './components/LanguageSelector';
 import DamageForm, { AddDamageButton } from './components/DamageForm';
 import { FormData, DamageDetail, DamageType, ResidenceType, RoomType } from './types';
-import generatePdf from './utils/htmlToPdfGenerator';
+import generatePdf from './utils/reactPdfGenerator';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
 import { Label } from './components/ui/label';
 import { Card } from './components/ui/card';
 
+// Map สำหรับเก็บข้อมูลชื่อโครงการจาก URL parameter
+const projectNameMapping: Record<string, string> = {
+  'rhythm': 'Rhythm Asok',
+  'rhythm-sukhumvit': 'Rhythm Sukhumvit',
+  'rhythm-rangnam': 'Rhythm Rangnam',
+  'rhythm-phahol-ari': 'Rhythm Phahol-Ari',
+  'rhythm-ekamai': 'Rhythm Ekamai'
+};
+
+// NotFound component สำหรับแสดงเมื่อไม่พบโครงการที่ระบุ
+const NotFound: React.FC = () => {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center">
+      <h1 className="text-4xl font-bold mb-4">404</h1>
+      <h2 className="text-2xl mb-6">โครงการที่คุณต้องการไม่มีในระบบ</h2>
+      <p className="text-gray-600 mb-8">กรุณาตรวจสอบ URL อีกครั้ง</p>
+      <ul className="space-y-2">
+        {Object.entries(projectNameMapping).map(([key, name]) => (
+          <li key={key}>
+            <a 
+              href={`/${key}`} 
+              className="text-blue-500 hover:underline"
+            >
+              {name}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+};
+
 function App() {
-  const { t: originalT, i18n } = useTranslation();
+  const { t: originalT } = useTranslation();
   const t = originalT as unknown as (key: string, options?: any) => string;
   
   const [loading, setLoading] = useState(false);
+  const [projectNotFound, setProjectNotFound] = useState(false);
   const [notification, setNotification] = useState<{
     open: boolean;
     message: string;
@@ -28,10 +61,30 @@ function App() {
     severity: 'success',
   });
   
+  // ฟังก์ชันสำหรับดึงชื่อโครงการจาก URL parameter
+  const getProjectNameFromURL = (): { name: string, key: string } | null => {
+    // ดึง pathname จาก URL ปัจจุบัน
+    const pathname = window.location.pathname;
+    // ลบ / ออกและดึงเฉพาะส่วนที่ต้องการ
+    const key = pathname.split('/').filter(Boolean)[0];
+    
+    // ถ้าไม่มี key หรือไม่พบใน mapping ให้ return null
+    if (!key || !projectNameMapping[key]) {
+      return null;
+    }
+    
+    // ส่งคืนชื่อโครงการจาก mapping
+    return { 
+      key, 
+      name: projectNameMapping[key] 
+    };
+  };
+  
   const [formData, setFormData] = useState<FormData>({
     roomNumber: '',
     residentName: '',
     residenceType: 'owner' as ResidenceType,
+    projectName: '',
     damages: [
       {
         id: uuidv4(),
@@ -48,6 +101,21 @@ function App() {
     roomNumber: false,
     residentName: false,
   });
+  
+  // อัพเดทชื่อโครงการเมื่อ URL เปลี่ยน
+  useEffect(() => {
+    const project = getProjectNameFromURL();
+    
+    if (project) {
+      setFormData(prev => ({
+        ...prev,
+        projectName: project.name
+      }));
+      setProjectNotFound(false);
+    } else {
+      setProjectNotFound(true);
+    }
+  }, []);
   
   const validateForm = (): boolean => {
     const newErrors = {
@@ -175,6 +243,21 @@ function App() {
     });
   }, []);
   
+  const handleAddCrack = useCallback(() => {
+    const newDamage: DamageDetail = {
+      id: uuidv4(),
+      type: 'crack' as DamageType,
+      location: '',
+      description: 'รอยแตกร้าว',
+      images: [],
+    };
+    
+    setFormData((prev) => ({
+      ...prev,
+      damages: [...prev.damages, newDamage],
+    }));
+  }, []);
+  
   const handleGeneratePdf = async () => {
     if (!validateForm()) {
       setNotification({
@@ -188,61 +271,51 @@ function App() {
     setLoading(true);
     
     try {
-      // ทำให้ข้อมูลพร้อมสำหรับการสร้าง PDF
-      const pdfData = {
-        ...formData,
-        // สร้างก๊อปปี้ของข้อมูลและทำความสะอาดข้อมูลความเสียหาย
-        damages: formData.damages.map(damage => ({
-          ...damage,
-          // ตรวจสอบให้แน่ใจว่าทุกฟิลด์มีค่า
-          type: damage.type || 'other',
-          location: damage.location || '',
-          description: damage.description || '',
-          // กรองรูปภาพเฉพาะที่มีข้อมูลไฟล์
-          images: damage.images
-            .filter(img => img && img.file instanceof File)
-            .map(img => ({
-              ...img,
-              // แนะนำให้ใช้ไฟล์ไปสร้าง base64 โดยตรงมากกว่าใช้ preview URL
-              preview: '', // จะถูกสร้างใหม่ในตัว PDF generator
-            }))
-        }))
-      };
+      // แปลงรูปภาพเป็น base64
+      const processedImages: { id: string; damageId: string; base64: string }[] = [];
       
-      // Prepare translations for PDF
-      const pdfTranslations = {
-        title: 'Earthquake Damage Report',
-        roomNumber: t('form.roomNumber'),
-        residentName: t('form.residentName'),
-        residenceType: t('form.residenceType'),
-        residenceTypes: {
-          owner: t('residenceType.owner'),
-          renter: t('residenceType.renter'),
-        },
-        damages: t('form.damages'),
-        damageTypes: {
-          water: t('damageType.water'),
-          electric: t('damageType.electric'),
-          other: t('damageType.other'),
-        },
-        damageLocation: t('form.damageLocation'),
-        damageDescription: t('form.damageDescription'),
-      };
+      // ประมวลผลรูปภาพแบบ sequential
+      for (const damage of formData.damages) {
+        if (damage.images && damage.images.length > 0) {
+          for (const img of damage.images) {
+            if (img.file) {
+              try {
+                // แปลงไฟล์เป็น base64
+                const base64 = await new Promise<string>((resolve, reject) => {
+                  const reader = new FileReader();
+                  reader.onload = () => resolve(reader.result as string);
+                  reader.onerror = reject;
+                  reader.readAsDataURL(img.file!);
+                });
+                
+                processedImages.push({
+                  id: img.id,
+                  damageId: damage.id,
+                  base64
+                });
+              } catch (error) {
+                console.error('Error processing image:', error);
+              }
+            }
+          }
+        }
+      }
       
       console.log('Generating PDF...');
-      const pdfDataUri = await generatePdf({
-        formData: pdfData,
-        lang: i18n.language,
-        translations: pdfTranslations,
-      });
+      // เรียกใช้ PDF Generator ตัวใหม่ที่ใช้ @react-pdf/renderer
+      const pdfDataUri = await generatePdf(formData, processedImages);
       console.log('PDF generated successfully');
       
       if (!pdfDataUri) {
         throw new Error('PDF data is empty');
       }
       
-      // ดาวน์โหลด PDF โดยตรง
-      const fileName = `Damage_Report_${formData.roomNumber}.pdf`;
+      // ดึง key ของโครงการจาก URL
+      const project = getProjectNameFromURL();
+      const projectKey = project?.key || 'unknown';
+      
+      // ดาวน์โหลด PDF โดยตรงด้วยชื่อไฟล์ที่กำหนด
+      const fileName = `${projectKey}_${formData.roomNumber}.pdf`;
       const a = document.createElement('a');
       a.href = pdfDataUri;
       a.download = fileName;
@@ -277,30 +350,39 @@ function App() {
       });
     };
   }, [formData.damages]);
+
+  // ถ้าไม่พบโครงการให้แสดงหน้า NotFound
+  if (projectNotFound) {
+    return <NotFound />;
+  }
   
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="container mx-auto px-4 max-w-3xl">
-        <LanguageSelector />
+        <div className="flex flex-col items-center mb-6">
+          <h1 className="text-2xl font-bold">{t('app.title')}</h1>
+          <h2 className="text-xl mt-1 text-gray-600">{formData.projectName}</h2>
+          <div className="self-end">
+            <LanguageSelector />
+          </div>
+        </div>
         
         <Card className="p-6 md:p-8 mb-6 rounded-lg shadow-md">
-          <h1 className="text-2xl md:text-3xl font-bold text-center text-green-700 mb-6">
-            {t('app.title')}
-          </h1>
+          <h2 className="text-xl font-semibold mb-4">{t('form.basicInfo')}</h2>
           
           <div className="space-y-6 mb-8">
             <div className="space-y-2">
-              <Label htmlFor="roomNumber" className="font-medium">
-                {t('form.roomNumber')} <span className="text-red-500">*</span>
+              <Label htmlFor="roomNumber" className={errors.roomNumber ? "text-destructive" : ""}>
+                {t('form.roomNumber')} *
               </Label>
               <Input
                 id="roomNumber"
                 value={formData.roomNumber}
                 onChange={(e) => handleTextChange('roomNumber', e.target.value)}
-                className={errors.roomNumber ? "border-red-500" : ""}
+                className={errors.roomNumber ? "border-destructive" : ""}
               />
               {errors.roomNumber && (
-                <p className="text-sm text-red-500">{t('form.requiredField')}</p>
+                <p className="text-destructive text-xs">{t('form.requiredField')}</p>
               )}
             </div>
             
@@ -350,29 +432,44 @@ function App() {
             </div>
           </div>
           
-          <h2 className="text-xl font-semibold mb-4 mt-8">
-            {t('form.damages')}
-          </h2>
-          
-          {formData.damages.length === 0 && (
-            <p className="text-gray-500 italic mb-4">
-              {t('form.noDamages')}
-            </p>
-          )}
-          
-          {formData.damages.map((damage, index) => (
-            <DamageForm
-              key={damage.id}
-              damage={damage}
-              onUpdate={handleUpdateDamage}
-              onDelete={handleDeleteDamage}
-              onAddImage={handleAddDamageImage}
-              onDeleteImage={handleDeleteDamageImage}
-              index={index}
-            />
-          ))}
-          
-          <AddDamageButton onAddDamage={handleAddDamage} />
+          <div className="space-y-4 mb-8">
+            <h2 className="text-xl font-semibold">{t('form.damageSection')}</h2>
+            
+            {formData.damages.filter(damage => damage.type !== 'crack').map((damage, index) => (
+              <DamageForm
+                key={damage.id}
+                damage={damage}
+                onUpdate={handleUpdateDamage}
+                onDelete={handleDeleteDamage}
+                onAddImage={handleAddDamageImage}
+                onDeleteImage={handleDeleteDamageImage}
+                index={index}
+              />
+            ))}
+            
+            <AddDamageButton onAddDamage={handleAddDamage} />
+          </div>
+
+          <div className="space-y-4 mb-8">
+            <h2 className="text-xl font-semibold">{t('form.crackSection')}</h2>
+            <p className="text-sm text-gray-600 mb-4">{t('form.crackDescription')}</p>
+            
+            {formData.damages.filter(damage => damage.type === 'crack').map((damage, index) => (
+              <DamageForm
+                key={damage.id}
+                damage={damage}
+                onUpdate={handleUpdateDamage}
+                onDelete={handleDeleteDamage}
+                onAddImage={handleAddDamageImage}
+                onDeleteImage={handleDeleteDamageImage}
+                index={index}
+              />
+            ))}
+            
+            <Button onClick={handleAddCrack} className="w-full">
+              + {t('form.addCrack')}
+            </Button>
+          </div>
           
           <div className="mt-8 flex justify-center">
             <Button
