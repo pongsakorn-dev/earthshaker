@@ -288,18 +288,14 @@ function App() {
           for (const img of damage.images) {
             if (img.file) {
               try {
-                // แปลงไฟล์เป็น base64
-                const base64 = await new Promise<string>((resolve, reject) => {
-                  const reader = new FileReader();
-                  reader.onload = () => resolve(reader.result as string);
-                  reader.onerror = reject;
-                  reader.readAsDataURL(img.file!);
-                });
+                // แปลงรูปภาพให้เป็น JPEG ที่มีความเข้ากันได้สูงกับ PDF
+                const imageUrl = img.preview;
+                const jpegBase64 = await convertToJpeg(imageUrl);
                 
                 processedImages.push({
                   id: img.id,
                   damageId: damage.id,
-                  base64
+                  base64: jpegBase64
                 });
               } catch (error) {
                 console.error('Error processing image:', error);
@@ -328,6 +324,7 @@ function App() {
       // ตรวจสอบว่าเป็นอุปกรณ์และระบบปฏิบัติการอะไร
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isAndroid = /Android/.test(navigator.userAgent);
+      const isChrome = /Chrome/.test(navigator.userAgent) && !/Edge|Edg/.test(navigator.userAgent);
       const isMobile = isIOS || isAndroid || /Mobi|mini|IEMobile/i.test(navigator.userAgent);
       
       // สร้าง blob สำหรับการดาวน์โหลดในทุกแพลตฟอร์ม
@@ -343,37 +340,124 @@ function App() {
       const blobUrl = URL.createObjectURL(blob);
       
       if (isMobile) {
-        // เปิดในหน้าต่างใหม่สำหรับอุปกรณ์มือถือ
-        window.open(blobUrl, '_blank');
-        
-        let saveInstructions = '';
-        
-        if (isIOS) {
-          saveInstructions = `
-            1. กดปุ่มแชร์ (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น 📤) ที่อยู่ด้านล่างกลางของหน้าจอ
-            2. เลือก "Save to Files" (บันทึกลงในไฟล์)
-            3. เลือกตำแหน่งที่ต้องการจัดเก็บแล้วกด "Save"
-          `;
+        // สำหรับ Android บางรุ่น สามารถทดลองใช้ anchor element เพื่อดาวน์โหลด
+        if (isAndroid && isChrome) {
+          try {
+            // ลองดาวน์โหลดตรงก่อน (Chrome บน Android บางรุ่นรองรับ)
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = fileName;
+            a.target = '_blank'; // สำคัญสำหรับ Android
+            a.setAttribute('rel', 'noopener');
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            
+            setTimeout(() => {
+              document.body.removeChild(a);
+            }, 100);
+            
+            // แสดงคำแนะนำทั้งสองกรณี เผื่อดาวน์โหลดตรงไม่ได้
+            setNotification({
+              open: true,
+              message: `PDF กำลังดาวน์โหลด... หากไม่พบไฟล์ที่ดาวน์โหลด โปรดดูที่:
+              1. แถบแจ้งเตือนด้านบนของหน้าจอ (Notification)
+              2. โฟลเดอร์ Downloads ในเครื่อง
+              3. หากยังไม่พบ ลองกดปุ่มเมนู (⋮) และเลือก "ดาวน์โหลด"`,
+              severity: 'success',
+            });
+            
+            // ทำความสะอาด URL
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl);
+            }, 1000);
+          } catch (error) {
+            console.error('Failed to download directly on Android Chrome, falling back to tab open:', error);
+            // Fallback - เปิดในแท็บใหม่
+            window.open(blobUrl, '_blank');
+            
+            setNotification({
+              open: true,
+              message: `
+                1. กดปุ่มเมนู (⋮) ที่มุมบนขวาของหน้าจอ
+                2. เลือก "Download" (ดาวน์โหลด)
+                3. หรือใช้ปุ่มดาวน์โหลด (⬇️) ถ้ามีแสดงบนหน้าจอ
+              `,
+              severity: 'success',
+            });
+            
+            // ทำความสะอาด URL
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl);
+            }, 1000);
+          }
         } else if (isAndroid) {
-          saveInstructions = `
-            1. กดปุ่มเมนู (⋮) ที่มุมบนขวาของหน้าจอ
-            2. เลือก "Download" (ดาวน์โหลด)
-            3. หรือใช้ปุ่มดาวน์โหลด (⬇️) ถ้ามีแสดงบนหน้าจอ
-          `;
+          // Android ที่ไม่ใช่ Chrome
+          try {
+            // ลองอีกวิธีสำหรับ Android ทั่วไป (Samsung Browser, etc.)
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = fileName;
+            link.click();
+            
+            setNotification({
+              open: true,
+              message: `กำลังบันทึกไฟล์... หากไม่พบการดาวน์โหลด ให้กดปุ่มเมนู (⋮) และเลือก "ดาวน์โหลด"`,
+              severity: 'success',
+            });
+            
+            // ทำความสะอาด URL
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl);
+            }, 1000);
+          } catch (e) {
+            // Fallback - เปิดในแท็บใหม่
+            window.open(blobUrl, '_blank');
+            
+            setNotification({
+              open: true,
+              message: `PDF ถูกสร้างแล้ว กรุณากดปุ่มดาวน์โหลดในหน้าที่เปิดขึ้น`,
+              severity: 'success',
+            });
+            
+            // ทำความสะอาด URL
+            setTimeout(() => {
+              URL.revokeObjectURL(blobUrl);
+            }, 1000);
+          }
+        } else if (isIOS) {
+          // สำหรับ iOS ยังคงต้องใช้วิธีเปิดในแท็บใหม่
+          window.open(blobUrl, '_blank');
+          
+          setNotification({
+            open: true,
+            message: `
+              1. กดปุ่มแชร์ (รูปสี่เหลี่ยมมีลูกศรชี้ขึ้น 📤) ที่อยู่ด้านล่างกลางของหน้าจอ
+              2. เลือก "Save to Files" (บันทึกลงในไฟล์)
+              3. เลือกตำแหน่งที่ต้องการจัดเก็บแล้วกด "Save"
+            `,
+            severity: 'success',
+          });
+          
+          // ทำความสะอาด URL
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+          }, 1000);
         } else {
-          saveInstructions = 'กดปุ่มแชร์หรือเมนูตัวเลือกในเบราว์เซอร์ของคุณ แล้วเลือกบันทึกไฟล์';
+          // สำหรับมือถืออื่นๆ
+          window.open(blobUrl, '_blank');
+          
+          setNotification({
+            open: true,
+            message: 'กดปุ่มแชร์หรือเมนูตัวเลือกในเบราว์เซอร์ของคุณ แล้วเลือกบันทึกไฟล์',
+            severity: 'success',
+          });
+          
+          // ทำความสะอาด URL
+          setTimeout(() => {
+            URL.revokeObjectURL(blobUrl);
+          }, 1000);
         }
-        
-        setNotification({
-          open: true,
-          message: `PDF ถูกสร้างแล้ว! วิธีบันทึก: ${saveInstructions}`,
-          severity: 'success',
-        });
-        
-        // ทำความสะอาด URL หลังจากเปิดในหน้าต่างใหม่
-        setTimeout(() => {
-          URL.revokeObjectURL(blobUrl);
-        }, 1000);
       } else {
         // สำหรับ desktop browsers - ดาวน์โหลดโดยตรง
         try {
@@ -434,6 +518,66 @@ function App() {
       });
     };
   }, [formData.damages]);
+
+  // ฟังก์ชันสำหรับแปลงรูปภาพเป็น JPEG ด้วย canvas
+  const convertToJpeg = (imageUrl: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      
+      img.onload = () => {
+        try {
+          // สร้าง canvas และกำหนดขนาด
+          const canvas = document.createElement('canvas');
+          
+          // คำนวณขนาดใหม่ - ปรับความละเอียดรูปภาพลงถ้าจำเป็น (ไม่เกิน 1200px)
+          let width = img.width;
+          let height = img.height;
+          const maxDimension = 1200;
+          
+          if (width > maxDimension || height > maxDimension) {
+            if (width > height) {
+              height = Math.round(height * (maxDimension / width));
+              width = maxDimension;
+            } else {
+              width = Math.round(width * (maxDimension / height));
+              height = maxDimension;
+            }
+          }
+          
+          canvas.width = width;
+          canvas.height = height;
+          
+          // วาดรูปภาพลงบน canvas
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            throw new Error('Unable to get canvas context');
+          }
+          
+          // วาดรูปสีขาวเป็นพื้นหลังก่อน (ป้องกันปัญหาความโปร่งใส)
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          
+          // วาดรูปจริงทับไป
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          // แปลงเป็น JPEG (คุณภาพ 0.9 หรือ 90%)
+          const jpegBase64 = canvas.toDataURL('image/jpeg', 0.9);
+          resolve(jpegBase64);
+        } catch (error) {
+          console.error('Canvas processing error:', error);
+          reject(error);
+        }
+      };
+      
+      img.onerror = (error) => {
+        console.error('Image loading error:', error);
+        reject(error);
+      };
+      
+      img.src = imageUrl;
+    });
+  };
 
   // ถ้าไม่พบโครงการให้แสดงหน้า NotFound
   if (projectNotFound) {
