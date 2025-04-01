@@ -4,28 +4,51 @@
     "description": "รายงานความเสียหายของห้องจากแผ่นดินไหว"
   },
   "form": {
-    "basicInfo": "ข้อมูลทั่วไป",
+    "title": "แบบฟอร์มรายงานความเสียหาย",
+    "basicInfo": "ข้อมูลพื้นฐาน",
     "projectName": "ชื่อโครงการ",
-    "roomNumber": "หมายเลขห้อง",
-    "residentName": "ชื่อผู้อยู่อาศัย",
-    "residenceType": "ประเภทการอยู่อาศัย",
-    "damageSection": "ความเสียหายระบบน้ำและไฟฟ้า",
+    "floor": "ชั้น",
+    "room": "ห้อง",
+    "roomNumber": "เลขห้อง",
+    "residentName": "ชื่อผู้พักอาศัย",
+    "phoneNumber": "เบอร์โทรศัพท์",
+    "email": "อีเมล",
+    "residenceType": "ประเภทผู้พักอาศัย",
+    "residenceTypeOptions": {
+      "owner": "เจ้าของห้อง",
+      "renter": "ผู้เช่า",
+      "company": "บริษัท",
+      "other": "อื่นๆ"
+    },
+    "otherResidenceType": "ระบุประเภทผู้พักอาศัย",
+    "damageSection": "ความเสียหายระบบประปาและไฟฟ้า",
+    "electricDescription": "กรุณาระบุความเสียหายที่ระบบประปาและไฟฟ้าในห้อง",
+    "structuralSection": "ความเสียหายที่ตัวอาคารหรือเชิงโครงสร้าง",
+    "structuralDescription": "กรุณาระบุความเสียหายที่ตัวอาคารหรือเชิงโครงสร้างภายในห้อง",
     "crackSection": "ความเสียหายรอยแตกร้าว",
     "crackDescription": "ระบุตำแหน่งและอัพโหลดรูปภาพรอยแตกร้าว",
     "damages": "ความเสียหาย",
     "damageDetails": "รายละเอียดความเสียหาย",
-    "images": "รูปภาพ",
+    "images": "รูปภาพความเสียหาย",
     "imageDetails": "รายละเอียดรูปภาพ",
-    "room": "ห้อง",
     "damageLocation": "ตำแหน่งความเสียหาย",
     "damageDescription": "คำอธิบายความเสียหาย",
     "generateReport": "สร้างรายงาน PDF",
+    "generating": "กำลังสร้างรายงาน...",
+    "pdfGenerated": "สร้างรายงาน PDF สำเร็จแล้ว การดาวน์โหลดควรเริ่มต้นโดยอัตโนมัติ",
+    "pdfGenerationError": "เกิดข้อผิดพลาดในการสร้างรายงาน PDF กรุณาลองใหม่อีกครั้ง",
+    "validationErrors": "กรุณากรอกข้อมูลที่จำเป็นทั้งหมดก่อนสร้างรายงาน",
     "addMore": "เพิ่มรูปภาพ",
     "addImages": "เพิ่มรูปภาพ",
-    "addDamage": "เพิ่มจุดความเสียหายใหม่",
+    "addDamage": "เพิ่มความเสียหายระบบประปาและไฟฟ้า",
     "addCrack": "เพิ่มจุดรอยแตกร้าวใหม่",
+    "addStructural": "เพิ่มความเสียหายเชิงโครงสร้าง",
     "noDamages": "ยังไม่มีจุดความเสียหายที่ระบุ คลิกปุ่มด้านล่างเพื่อเพิ่ม",
-    "requiredField": "จำเป็นต้องกรอกข้อมูล"
+    "requiredField": "จำเป็นต้องกรอกข้อมูล",
+    "selectOption": "เลือกตัวเลือก",
+    "structuralDamageArea": "บริเวณที่ได้รับความเสียหาย",
+    "specifyRoom": "ระบุห้อง",
+    "specifyArea": "ระบุบริเวณที่ได้รับความเสียหาย"
   },
   "language": {
     "english": "English",
@@ -36,21 +59,55 @@
     "bedroom": "ห้องนอน",
     "kitchen": "ห้องครัว",
     "bathroom": "ห้องน้ำ",
+    "storage": "ห้องเก็บของ",
+    "balcony": "ระเบียง",
     "other": "อื่นๆ"
   },
   "damageType": {
-    "water": "ระบบน้ำ",
+    "water": "ระบบประปา",
     "electric": "ระบบไฟฟ้า",
+    "structural": "ความเสียหายเชิงโครงสร้าง",
     "crack": "รอยแตกร้าว",
     "other": "อื่นๆ"
   },
   "residenceType": {
     "owner": "เจ้าของห้อง",
-    "renter": "ผู้เช่า"
+    "renter": "ผู้เช่า",
+    "company": "นิติบุคคล",
+    "other": "อื่นๆ"
   },
   "damageExtent": {
-    "minor": "เล็กน้อย",
+    "minor": "น้อย",
     "moderate": "ปานกลาง",
     "severe": "รุนแรง"
+  },
+  "notFound": {
+    "projectNotFound": "โครงการที่คุณต้องการไม่มีในระบบ",
+    "checkUrl": "กรุณาตรวจสอบ URL อีกครั้ง หรือเลือกโครงการจากรายการด้านล่าง"
+  },
+  "Select Room": "เลือกห้อง",
+  "Select Area": "เลือกบริเวณ",
+  "buttons": {
+    "submit": "ส่งรายงาน",
+    "cancel": "ยกเลิก",
+    "generatePdf": "สร้างไฟล์ PDF",
+    "downloadPdf": "ดาวน์โหลด PDF"
+  },
+  "notifications": {
+    "success": "บันทึกข้อมูลสำเร็จ",
+    "error": "เกิดข้อผิดพลาด",
+    "generating": "กำลังสร้างไฟล์ PDF...",
+    "pdfGenerated": "สร้างไฟล์ PDF สำเร็จ",
+    "pdfGenerationError": "เกิดข้อผิดพลาดในการสร้างไฟล์ PDF",
+    "validationErrors": "กรุณาตรวจสอบข้อมูลที่กรอก"
+  },
+  "structuralDamageArea": {
+    "ceiling": "ฝ้าเพดาน",
+    "wall": "ผนัง",
+    "floor": "พื้น",
+    "baseboard": "ขอบบัวด้านล่าง",
+    "door": "ประตู",
+    "doorFrame": "วงกบประตู",
+    "other": "อื่นๆ"
   }
 } 

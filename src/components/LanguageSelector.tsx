@@ -2,8 +2,13 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
+import { Building2 } from 'lucide-react';
 
-const LanguageSelector: React.FC = () => {
+interface LanguageSelectorProps {
+  projectName?: string;
+}
+
+const LanguageSelector: React.FC<LanguageSelectorProps> = ({ projectName }) => {
   const { t: originalT, i18n } = useTranslation();
   const t = originalT as unknown as (key: string, options?: any) => string;
 
@@ -12,25 +17,32 @@ const LanguageSelector: React.FC = () => {
   };
 
   return (
-    <div className="fixed top-4 right-4 z-50 flex rounded-md shadow-sm">
-      <Button
-        onClick={() => changeLanguage('en')}
-        className={cn(
-          "rounded-r-none px-3 py-1 text-sm",
-          i18n.language === 'en' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-        )}
-      >
-        {t('language.english')}
-      </Button>
-      <Button
-        onClick={() => changeLanguage('th')}
-        className={cn(
-          "rounded-l-none px-3 py-1 text-sm",
-          i18n.language === 'th' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/80'
-        )}
-      >
-        {t('language.thai')}
-      </Button>
+    <div className=" ml-4 mt-4 mr-4 z-50 flex justify-end items-center gap-4">
+      
+      <div className="flex rounded-md shadow-sm">
+        <Button
+          onClick={() => changeLanguage('en')}
+          size="sm"
+          variant={i18n.language === 'en' ? 'default' : 'outline'}
+          className={cn(
+            "rounded-r-none text-md font-normal",
+            i18n.language === 'en' ? '' : 'hover:bg-muted/80'
+          )}
+        >
+          {t('language.english')}
+        </Button>
+        <Button
+          onClick={() => changeLanguage('th')}
+          size="sm"
+          variant={i18n.language === 'th' ? 'default' : 'outline'}
+          className={cn(
+            "rounded-l-none text-md font-normal",
+            i18n.language === 'th' ? '' : 'hover:bg-muted/80'
+          )}
+        >
+          {t('language.thai')}
+        </Button>
+      </div>
     </div>
   );
 };

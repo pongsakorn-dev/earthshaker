@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { DamageDetail, DamageType, RoomType } from '../types';
+import { DamageDetail, DamageType, RoomType, StructuralDamageArea } from '../types';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -8,6 +8,13 @@ import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Textarea } from './ui/textarea';
 import { DeleteIcon, AddPhotoIcon } from './ui/icons';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select"
 
 interface DamageFormProps {
   damage: DamageDetail;
@@ -16,6 +23,7 @@ interface DamageFormProps {
   onAddImage: (damageId: string, files: File[]) => void;
   onDeleteImage: (damageId: string, imageId: string) => void;
   index: number;
+  isStructural: boolean;
 }
 
 const DamageForm: React.FC<DamageFormProps> = ({
@@ -24,37 +32,50 @@ const DamageForm: React.FC<DamageFormProps> = ({
   onDelete,
   onAddImage,
   onDeleteImage,
-  index
+  index,
+  isStructural
 }) => {
   const { t: originalT } = useTranslation();
   const t = originalT as unknown as (key: string, options?: any) => string;
   
   const handleDamageTypeChange = (type: DamageType, checked: boolean) => {
-    onUpdate(damage.id, { type: checked ? type : 'other' });
+    onUpdate(damage.id, { 
+      type: checked ? type : 'other',
+      structuralDamageArea: undefined
+    });
   };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const filesArray = Array.from(event.target.files);
       onAddImage(damage.id, filesArray);
-      
-      // Reset input value so the same file can be selected again if removed
       event.target.value = '';
     }
   };
 
-  // สร้างรายการประเภทห้องสำหรับ select
   const roomOptions = [
     { value: 'livingRoom', label: t('rooms.livingRoom') },
     { value: 'bedroom', label: t('rooms.bedroom') },
     { value: 'kitchen', label: t('rooms.kitchen') },
     { value: 'bathroom', label: t('rooms.bathroom') },
+    { value: 'storage', label: t('rooms.storage') },
+    { value: 'balcony', label: t('rooms.balcony') },
     { value: 'other', label: t('rooms.other') },
+  ];
+
+  const structuralDamageAreaOptions = [
+    { value: 'ceiling', label: t('structuralDamageArea.ceiling') },
+    { value: 'wall', label: t('structuralDamageArea.wall') },
+    { value: 'floor', label: t('structuralDamageArea.floor') },
+    { value: 'baseboard', label: t('structuralDamageArea.baseboard') },
+    { value: 'door', label: t('structuralDamageArea.door') },
+    { value: 'doorFrame', label: t('structuralDamageArea.doorFrame') },
+    { value: 'other', label: t('structuralDamageArea.other') },
   ];
   
   return (
     <Card className="mb-6 border border-border rounded-lg">
-      <CardContent className="p-4">
+      <CardContent className="flex flex-col gap-6 p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium">
             {t('form.damageDetails')} #{index + 1}
@@ -71,75 +92,96 @@ const DamageForm: React.FC<DamageFormProps> = ({
         </div>
         
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id={`water-${damage.id}`}
-                checked={damage.type === 'water'} 
-                onCheckedChange={(checked) => handleDamageTypeChange('water', checked === true)}
-              />
-              <Label htmlFor={`water-${damage.id}`}>{t('damageType.water')}</Label>
+          {!isStructural && (
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`water-${damage.id}`}
+                  checked={damage.type === 'water'} 
+                  onCheckedChange={(checked) => handleDamageTypeChange('water', checked === true)}
+                />
+                <Label htmlFor={`water-${damage.id}`}>{t('damageType.water')}</Label>
+              </div>
+              
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`electric-${damage.id}`}
+                  checked={damage.type === 'electric'} 
+                  onCheckedChange={(checked) => handleDamageTypeChange('electric', checked === true)}
+                />
+                <Label htmlFor={`electric-${damage.id}`}>{t('damageType.electric')}</Label>
+              </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id={`electric-${damage.id}`}
-                checked={damage.type === 'electric'} 
-                onCheckedChange={(checked) => handleDamageTypeChange('electric', checked === true)}
-              />
-              <Label htmlFor={`electric-${damage.id}`}>{t('damageType.electric')}</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id={`crack-${damage.id}`}
-                checked={damage.type === 'crack'} 
-                onCheckedChange={(checked) => handleDamageTypeChange('crack', checked === true)}
-              />
-              <Label htmlFor={`crack-${damage.id}`}>{t('damageType.crack')}</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id={`other-${damage.id}`}
-                checked={damage.type === 'other'} 
-                onCheckedChange={(checked) => handleDamageTypeChange('other', checked === true)}
-              />
-              <Label htmlFor={`other-${damage.id}`}>{t('damageType.other')}</Label>
-            </div>
-          </div>
+          )}
           
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor={`room-type-${damage.id}`}>{t('form.room')}</Label>
-              <select
-                id={`room-type-${damage.id}`}
+              <Label>{t('form.room')}</Label>
+              <Select
                 value={damage.room || ''}
-                onChange={(e) => onUpdate(damage.id, { room: e.target.value as RoomType })}
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                onValueChange={(value) => onUpdate(damage.id, { room: value as RoomType })}
               >
-                <option value="">{t('Select Room')}</option>
-                {roomOptions.map(option => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor={`location-${damage.id}`}>{t('form.damageLocation')} *</Label>
-              <Input
-                id={`location-${damage.id}`}
-                value={damage.location}
-                onChange={(e) => onUpdate(damage.id, { location: e.target.value })}
-                required
-                className={!damage.location ? "border-destructive" : ""}
-              />
-              {!damage.location && (
-                <p className="text-xs text-destructive mt-1">{t('form.requiredField')}</p>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t('Select Room')} />
+                </SelectTrigger>
+                <SelectContent>
+                  {roomOptions.map(option => (
+                    <SelectItem 
+                      key={option.value} 
+                      value={option.value}
+                      className="text-base py-3"
+                    >
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {damage.room === 'other' && (
+                <div className="mt-2">
+                  <Input
+                    placeholder={t('form.specifyRoom')}
+                    value={damage.otherRoom || ''}
+                    onChange={(e) => onUpdate(damage.id, { otherRoom: e.target.value })}
+                    className="w-full"
+                  />
+                </div>
               )}
             </div>
+
+            {isStructural && (
+              <div className="space-y-2">
+                <Label>{t('form.structuralDamageArea')}</Label>
+                <Select
+                  value={damage.structuralDamageArea || ''}
+                  onValueChange={(value) => onUpdate(damage.id, { structuralDamageArea: value as StructuralDamageArea })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder={t('Select Area')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {structuralDamageAreaOptions.map(option => (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value}
+                        className="text-base py-3"
+                      >
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {damage.structuralDamageArea === 'other' && (
+                  <div className="mt-2">
+                    <Input
+                      placeholder={t('form.specifyArea')}
+                      value={damage.otherStructuralDamageArea || ''}
+                      onChange={(e) => onUpdate(damage.id, { otherStructuralDamageArea: e.target.value })}
+                      className="w-full"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="space-y-2">
@@ -178,21 +220,20 @@ const DamageForm: React.FC<DamageFormProps> = ({
               </div>
             ))}
             
-            <label
-              htmlFor={`damage-image-upload-${damage.id}`}
-              className="flex flex-col items-center justify-center h-[120px] border-2 border-dashed border-muted rounded cursor-pointer hover:bg-muted/20"
-            >
+            <div className="relative h-[120px] border-2 border-dashed border-border rounded-lg flex items-center justify-center">
               <input
-                id={`damage-image-upload-${damage.id}`}
                 type="file"
-                multiple
                 accept="image/*"
+                multiple
                 onChange={handleFileChange}
-                className="sr-only"
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                aria-label="Add images"
               />
-              <AddPhotoIcon className="h-8 w-8 text-primary mb-2" />
-              <span className="text-xs text-center">{t('form.addImages')}</span>
-            </label>
+              <div className="flex flex-col items-center gap-2">
+                <AddPhotoIcon className="h-6 w-6 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{t('form.addImages')}</span>
+              </div>
+            </div>
           </div>
         </div>
       </CardContent>
@@ -211,7 +252,8 @@ export const AddDamageButton: React.FC<AddDamageButtonProps> = ({ onAddDamage })
   return (
     <Button 
       onClick={onAddDamage}
-      className="w-full"
+      variant="outline"
+      className="w-full border-primary text-primary"
     >
       + {t('form.addDamage')}
     </Button>

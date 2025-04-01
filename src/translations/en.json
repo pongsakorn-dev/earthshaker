@@ -4,53 +4,111 @@
     "description": "Report room damage from earthquake"
   },
   "form": {
+    "title": "Damage Report Form",
     "basicInfo": "Basic Information",
     "projectName": "Project Name",
+    "floor": "Floor",
+    "room": "Room",
     "roomNumber": "Room Number",
     "residentName": "Resident Name",
+    "phoneNumber": "Phone Number",
+    "email": "Email",
     "residenceType": "Residence Type",
-    "damageSection": "Water & Electrical Damages",
-    "crackSection": "Cracks Damages",
-    "crackDescription": "Specify the location and upload images of cracks",
+    "residenceTypeOptions": {
+      "owner": "Owner",
+      "renter": "Renter",
+      "company": "Company",
+      "other": "Other"
+    },
+    "otherResidenceType": "Specify Residence Type",
+    "damageSection": "Plumbing and Electrical System Damage",
+    "damageDescription": "Please specify any damage to the plumbing or electrical system in the unit",
+    "structuralSection": "Structural Damage",
+    "structuralDescription": "Please specify any damage to the building or structural elements of the unit",
+    "crackSection": "Crack Damage",
+    "crackDescription": "Specify location and upload crack images",
     "damages": "Damages",
     "damageDetails": "Damage Details",
-    "images": "Images",
+    "images": "Damage Images",
     "imageDetails": "Image Details",
     "room": "Room",
     "damageLocation": "Damage Location",
     "damageDescription": "Damage Description",
     "generateReport": "Generate PDF Report",
+    "generating": "Generating report...",
+    "pdfGenerated": "PDF report generated successfully. Download should start automatically.",
+    "pdfGenerationError": "Error generating PDF report. Please try again.",
+    "validationErrors": "Please fill in all required fields before generating the report.",
     "addMore": "Add More Images",
     "addImages": "Add Images",
-    "addDamage": "Add New Damage",
-    "addCrack": "Add New Crack",
-    "noDamages": "No damages added yet. Click the button below to add damage.",
-    "requiredField": "This field is required"
+    "addDamage": "Add Plumbing and Electrical Damage",
+    "addCrack": "Add New Crack Point",
+    "addStructural": "Add Structural Damage",
+    "noDamages": "No damage points specified yet. Click the button below to add.",
+    "requiredField": "This field is required",
+    "selectOption": "Select an option",
+    "structuralDamageArea": "Damaged Area",
+    "specifyRoom": "Specify Room",
+    "specifyArea": "Specify Damaged Area"
   },
   "language": {
     "english": "English",
-    "thai": "Thai"
+    "thai": "ไทย"
   },
   "rooms": {
     "livingRoom": "Living Room",
     "bedroom": "Bedroom",
     "kitchen": "Kitchen",
     "bathroom": "Bathroom",
+    "storage": "Storage Room",
+    "balcony": "Balcony",
     "other": "Other"
   },
   "damageType": {
-    "water": "Water System",
+    "water": "Plumbing System",
     "electric": "Electrical System",
+    "structural": "Structural Damage",
     "crack": "Crack",
     "other": "Other"
   },
   "residenceType": {
     "owner": "Owner",
-    "renter": "Renter"
+    "renter": "Renter",
+    "company": "Company",
+    "other": "Other"
   },
   "damageExtent": {
     "minor": "Minor",
     "moderate": "Moderate",
     "severe": "Severe"
+  },
+  "notFound": {
+    "projectNotFound": "The project you're looking for doesn't exist in our system.",
+    "checkUrl": "Please check the URL again or select a project from the list below."
+  },
+  "Select Room": "Select Room",
+  "Select Area": "Select Area",
+  "buttons": {
+    "submit": "Submit Report",
+    "cancel": "Cancel",
+    "generatePdf": "Generate PDF",
+    "downloadPdf": "Download PDF"
+  },
+  "notifications": {
+    "success": "Data saved successfully",
+    "error": "An error occurred",
+    "generating": "Generating PDF...",
+    "pdfGenerated": "PDF generated successfully",
+    "pdfGenerationError": "Error generating PDF",
+    "validationErrors": "Please check your input"
+  },
+  "structuralDamageArea": {
+    "ceiling": "Ceiling",
+    "wall": "Wall",
+    "floor": "Floor",
+    "baseboard": "Baseboard",
+    "door": "Door",
+    "doorFrame": "Door Frame",
+    "other": "Other"
   }
 } 

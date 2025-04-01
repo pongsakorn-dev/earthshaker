@@ -1,8 +1,10 @@
-export type DamageType = 'water' | 'electric' | 'crack' | 'other';
+export type DamageType = 'water' | 'electric' | 'structural' | 'other';
 
-export type ResidenceType = 'owner' | 'renter';
+export type ResidenceType = 'owner' | 'renter' | 'company' | 'other';
 
-export type RoomType = 'livingRoom' | 'bedroom' | 'kitchen' | 'bathroom' | 'other';
+export type RoomType = 'livingRoom' | 'bedroom' | 'kitchen' | 'bathroom' | 'storage' | 'balcony' | 'other';
+
+export type StructuralDamageArea = 'ceiling' | 'wall' | 'floor' | 'baseboard' | 'door' | 'doorFrame' | 'other';
 
 export interface DamageImage {
   id: string;
@@ -15,9 +17,12 @@ export interface DamageDetail {
   id: string;
   type: DamageType;
   room?: RoomType;
+  otherRoom?: string;
   location: string;
   description: string;
   images: DamageImage[];
+  structuralDamageArea?: StructuralDamageArea;
+  otherStructuralDamageArea?: string;
   processedImages?: Array<{
     id?: string;
     base64: string;
@@ -27,9 +32,13 @@ export interface DamageDetail {
 }
 
 export interface FormData {
+  floor: string;
   roomNumber: string;
   residentName: string;
+  phoneNumber: string;
+  email: string;
   residenceType: ResidenceType;
+  otherResidenceType: string;
   projectName: string;
   damages: DamageDetail[];
 }
@@ -37,5 +46,5 @@ export interface FormData {
 export interface GeneratePdfOptions {
   formData: FormData;
   lang: string;
-  translations: any;
+  translations: Record<string, string>;
 }

@@ -3,6 +3,9 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Kanit', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -56,6 +59,37 @@ module.exports = {
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            h1: {
+              fontWeight: 700,
+              fontSize: '2.25rem',
+              lineHeight: 1.2,
+            },
+            h2: {
+              fontWeight: 700,
+              fontSize: '1.75rem',
+              lineHeight: 1.3,
+            },
+            h3: {
+              fontWeight: 600,
+              fontSize: '1.5rem',
+              lineHeight: 1.4,
+            },
+            body: {
+              fontWeight: 400,
+              fontSize: '1.125rem',
+              lineHeight: 1.5,
+            },
+            small: {
+              fontWeight: 400,
+              fontSize: '1rem',
+              lineHeight: 1.4,
+            },
+          },
+        },
       },
     },
   },
