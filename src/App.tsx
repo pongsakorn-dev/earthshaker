@@ -336,11 +336,19 @@ function App() {
         throw new Error('Failed to generate PDF');
       }
       
-      // Create a download link
-      const link = document.createElement('a');
-      link.href = pdfDataUri;
-      link.download = `${formData.projectName}_${formData.roomNumber}_damage_report.pdf`;
-      link.click();
+      // ตรวจสอบว่าเป็น Safari หรือไม่
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      
+      if (isSafari) {
+        // สำหรับ Safari ให้ใช้ window.open
+        window.open(pdfDataUri, '_blank');
+      } else {
+        // สำหรับเบราว์เซอร์อื่นๆ ใช้วิธีเดิม
+        const link = document.createElement('a');
+        link.href = pdfDataUri;
+        link.download = `${formData.projectName}_${formData.roomNumber}_damage_report.pdf`;
+        link.click();
+      }
       
       // Show success notification
       setNotification({

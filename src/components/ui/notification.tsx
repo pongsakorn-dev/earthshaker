@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { cn } from '../../lib/utils';
 import { X } from 'lucide-react';
 
@@ -17,19 +17,29 @@ export function Notification({
   onClose,
   className,
 }: NotificationProps) {
+  useEffect(() => {
+    if (open) {
+      const timer = setTimeout(() => {
+        onClose();
+      }, 4000); // 4 seconds
+
+      return () => clearTimeout(timer);
+    }
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const severityStyles = {
-    success: 'bg-[hsl(var(--success)/0.1)] text-[hsl(var(--success))] border-[hsl(var(--success)/0.2)]',
-    error: 'bg-[hsl(var(--destructive)/0.1)] text-[hsl(var(--destructive))] border-[hsl(var(--destructive)/0.2)]',
-    warning: 'bg-[hsl(var(--warning)/0.1)] text-[hsl(var(--warning))] border-[hsl(var(--warning)/0.2)]',
-    info: 'bg-[hsl(var(--primary)/0.1)] text-[hsl(var(--primary))] border-[hsl(var(--primary)/0.2)]',
+    success: 'bg-[hsl(var(--success))] text-white border-[hsl(var(--success))]',
+    error: 'bg-[hsl(var(--destructive))] text-white border-[hsl(var(--destructive))]',
+    warning: 'bg-[hsl(var(--warning))] text-white border-[hsl(var(--warning))]',
+    info: 'bg-[hsl(var(--primary))] text-white border-[hsl(var(--primary))]',
   };
 
   return (
     <div
       className={cn(
-        'fixed bottom-4 right-4 p-4 rounded-md shadow-lg border max-w-md z-50 animate-in fade-in slide-in-from-bottom-5 duration-300',
+        'fixed top-4 right-4 p-4 rounded-md shadow-lg border max-w-[300px] z-50 animate-in fade-in slide-in-from-right-5 duration-300',
         severityStyles[severity],
         className
       )}
