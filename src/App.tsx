@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
-import { UserCircle2, Wrench, Building2 } from 'lucide-react';
+import { UserCircle2, Wrench, Building2, Calendar } from 'lucide-react';
 import heic2any from 'heic2any';
 import { heicTo, isHeic } from 'heic-to';
 
@@ -18,6 +18,18 @@ import AppLayout from './components/AppLayout';
 import NotFound from './components/NotFound';
 import { FormField, FormSection } from './components/ui/layout';
 import { SectionTitle } from './components/ui/typography';
+import { DatePicker } from './components/ui/datepicker';
+
+// ฟังก์ชันสำหรับจัดรูปแบบวันที่สำหรับ input
+function formatDateForInput(date: Date): string {
+  if (!date) return '';
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  return `${year}-${month}-${day}`;
+}
 
 // Map สำหรับเก็บข้อมูลชื่อโครงการจาก URL parameter
 const projectNameMapping: Record<string, string> = {
@@ -68,6 +80,7 @@ function App() {
     residenceType: 'owner' as ResidenceType,
     otherResidenceType: '',
     projectName: '',
+    reportDate: new Date(),
     damages: [],
   } as FormData);
 
@@ -497,6 +510,16 @@ function App() {
     };
   }, [pdfUrl]);
   
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const dateValue = e.target.value;
+    if (dateValue) {
+      setFormData((prev) => ({
+        ...prev,
+        reportDate: new Date(dateValue),
+      }));
+    }
+  };
+  
   if (projectNotFound) {
     return <NotFound projectMapping={projectNameMapping} />;
   }
@@ -518,8 +541,7 @@ function App() {
         <Card className="mb-6 border border-border rounded-lg">
           <CardContent className="flex flex-col gap-6 p-4 lg:p-6">
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <FormField className='col-span-1'>
                 <Label htmlFor="floor" className={errors.floor ? "text-destructive" : ""}>
                   {t('form.floor')} <span className="text-destructive">*</span>
@@ -550,6 +572,16 @@ function App() {
                 )}
               </FormField>
 
+              <FormField className='col-span-1'>
+                <Label htmlFor="reportDate">
+                  <span>{t('form.reportDate', 'วันที่รายงาน')}</span>
+                </Label>
+                <DatePicker
+                  id="reportDate"
+                  value={formatDateForInput(formData.reportDate)}
+                  onChange={handleDateChange}
+                />
+              </FormField>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

@@ -47,7 +47,8 @@
     "selectOption": "เลือกตัวเลือก",
     "structuralDamageArea": "บริเวณที่ได้รับความเสียหาย",
     "specifyRoom": "ระบุห้อง",
-    "specifyArea": "ระบุบริเวณที่ได้รับความเสียหาย"
+    "specifyArea": "ระบุบริเวณที่ได้รับความเสียหาย",
+    "reportDate": "วันที่รายงาน"
   },
   "language": {
     "english": "English",

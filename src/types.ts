@@ -40,6 +40,7 @@ export interface FormData {
   residenceType: ResidenceType;
   otherResidenceType: string;
   projectName: string;
+  reportDate: Date;
   damages: DamageDetail[];
 }
 

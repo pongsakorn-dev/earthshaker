@@ -2,6 +2,18 @@ import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image, Font, pdf } from '@react-pdf/renderer';
 import { FormData, DamageDetail } from '../types';
 
+// ฟังก์ชันการแปลงวันที่เป็นรูปแบบไทย
+const formatDateToThai = (date: Date): string => {
+  if (!date) return '';
+  
+  // เปลี่ยนเป็นรูปแบบ DD/MM/YY
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear().toString().slice(-2); // เอาเฉพาะ 2 หลักสุดท้าย
+  
+  return `${day}/${month}/${year}`;
+};
+
 // Register Thai fonts from local files
 Font.register({
   family: 'THSarabunNew',
@@ -54,7 +66,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 15,
-    color: '#2e7d32',
+    color: '#3f51b5',
   },
   roomNumber: {
     fontSize: 27,
@@ -62,7 +74,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     marginBottom: 25,
-    color: '#2e7d32',
+    color: '#3f51b5',
   },
   inspectionInfo: {
     fontSize: 12,
@@ -96,12 +108,12 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontFamily: 'THSarabunNew',
     fontWeight: 'bold',
-    color: '#2e7d32',
+    color: '#3f51b5',
     marginBottom: 4,
     fontSize: 14,
   },
   damageHeader: {
-    backgroundColor: '#2e7d32',
+    backgroundColor: '#3f51b5',
     color: 'white',
     padding: 12,
     fontFamily: 'THSarabunNew',
@@ -112,12 +124,12 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   damageTitle: {
-    color: '#2e7d32',
+    color: '#3f51b5',
     fontSize: 21,
     fontFamily: 'THSarabunNew',
     fontWeight: 'bold',
     marginBottom: 20,
-    borderBottom: '2 solid #2e7d32',
+    borderBottom: '2 solid #3f51b5',
     paddingBottom: 8,
   },
   damageDetail: {
@@ -130,7 +142,7 @@ const styles = StyleSheet.create({
   damageLabel: {
     fontFamily: 'THSarabunNew',
     fontWeight: 'bold',
-    color: '#2e7d32',
+    color: '#3f51b5',
     marginBottom: 4,
   },
   imageContainer: {
@@ -147,17 +159,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 180,
     objectFit: 'contain',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 4,
-    border: '1 solid #e0e0e0',
   },
   imageSingle: {
     width: '100%',
     height: 220,
     objectFit: 'contain',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 4,
-    border: '1 solid #e0e0e0',
   },
   imageCaption: {
     fontSize: 9,
@@ -265,9 +271,12 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 180,
     objectFit: 'contain',
-    backgroundColor: '#f5f5f5',
-    borderRadius: 4,
-    border: '1 solid #e0e0e0',
+  },
+  projectHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3f51b5',
+    marginBottom: 5,
   },
 });
 
@@ -282,8 +291,9 @@ const InfoPage = ({ formData, pageNumber, totalPages }: { formData: FormData, pa
     </View>
     
     {/* หัวข้อ */}
+    <Text style={styles.projectHeader}>{formData.projectName}</Text>
     <Text style={styles.header}>บันทึกความเสียหายของห้องชุด</Text>
-    <Text style={styles.roomNumber}>เลขที่ {formData.roomNumber} ชั้น {formData.floor}</Text>
+    <Text style={styles.roomNumber}>ชั้น {formData.floor} เลขที่ {formData.roomNumber}</Text>
     
     {/* ข้อมูลผู้อยู่อาศัย */}
     <View style={styles.infoSection}>
@@ -314,18 +324,21 @@ const InfoPage = ({ formData, pageNumber, totalPages }: { formData: FormData, pa
     
     {/* หัวข้อส่วนรายการความเสียหาย */}
     <Text style={styles.damageHeader}>รายการความเสียหาย</Text>
-    <Text style={styles.inspectionInfo}>วันที่รายงาน: {new Date().toLocaleDateString('th-TH')}</Text>
+    <Text style={styles.inspectionInfo}>วันที่รายงาน: {formData.reportDate ? formatDateToThai(formData.reportDate) : formatDateToThai(new Date())}</Text>
     
     {/* แสดงเลขหน้า */}
     <Text style={styles.paginator}>หน้า {pageNumber} / {totalPages}</Text>
     
-    {/* แสดงชื่อและลายเซ็นผู้รายงานที่มุมล่างขวา */}
-    <View style={styles.miniSignature}>
-      <Text>ลงชื่อ</Text>
-      <Text>{'\n'}</Text>
-      <View style={styles.miniSignatureLine} />
-      <Text style={{ textAlign: 'center' }}>({formData.residentName})</Text>
-      <Text>ผู้รายงานความเสียหาย</Text>
+    {/* ส่วนลายเซ็น - ปรับให้เหมือนกับหน้าอื่นๆ */}
+    <View style={styles.signatureSection}>
+      <View style={styles.signatureRow}>
+        <View style={styles.signatureBox}>
+          <Text style={styles.signatureText}>ลงชื่อ</Text>
+          <View style={styles.signatureLine} />
+          <Text style={styles.signatureText}>({formData.residentName})</Text>
+          <Text style={styles.signatureText}>ผู้รายงานความเสียหาย</Text>
+        </View>
+      </View>
     </View>
   </Page>
 );
@@ -350,161 +363,165 @@ const DamagePage = ({
   const firstImage = damageImages[0];
   const remainingImages = damageImages.slice(1);
 
-  // คำนวณจำนวนหน้าที่จำเป็นสำหรับรูปที่เหลือ (4 รูปต่อหน้า)
-  const remainingPages = Math.ceil(remainingImages.length / 4);
-
-  return (
-    <>
-      {/* หน้าหลักแสดงรายละเอียดและรูปแรก */}
-      <Page size="A4" style={styles.page}>
-        {/* ลายน้ำ */}
-        <View style={styles.watermark}>
-          <Text>{formData.projectName}</Text>
-          <Text style={{ fontSize: 30 }}>{formData.roomNumber}</Text>
-          <Text style={{ fontSize: 15 }}>ใช้สำหรับการรายงานความเสียหายของ {formData.projectName} - {formData.roomNumber} เท่านั้น</Text>
-        </View>
-        
-        {/* ข้อมูลหัวกระดาษ */}
-        <View style={styles.damagePointInfo}>
-          <Text>ห้องชุดเลขที่ {formData.roomNumber}</Text>
-          <Text>จุดที่ {index + 1} จากทั้งหมด {formData.damages.length} จุด</Text>
-        </View>
-        
-        {/* หัวข้อความเสียหาย */}
-        <Text style={styles.damageTitle}>
-          {index + 1}. {damage.type === 'water' ? 'ระบบน้ำ' : 
-                      damage.type === 'electric' ? 'ระบบไฟฟ้า' : 
-                      damage.type === 'structural' ? 'ความเสียหายเชิงโครงสร้าง' : 'อื่นๆ'}
-        </Text>
-        
-        {/* รายละเอียดความเสียหาย */}
-        <View style={styles.damageDetailsContainer}>
-          <View style={[styles.damageDetailRow, { marginBottom: damage.type === 'structural' ? 8 : 10 }]}>
-            {damage.room && (
-              <View style={styles.damageDetailHalf}>
-                <Text style={[styles.damageLabel, { marginBottom: damage.type === 'structural' ? 2 : 4 }]}>ประเภทห้อง:</Text>
-                <Text>
-                  {damage.room === 'livingRoom' ? 'ห้องนั่งเล่น' : 
-                   damage.room === 'bedroom' ? 'ห้องนอน' : 
-                   damage.room === 'kitchen' ? 'ห้องครัว' : 
-                   damage.room === 'bathroom' ? 'ห้องน้ำ' : 
-                   damage.room === 'storage' ? 'ห้องเก็บของ' :
-                   damage.room === 'balcony' ? 'ระเบียง' : 
-                   damage.room === 'other' && damage.otherRoom ? damage.otherRoom : 'อื่นๆ'}
-                </Text>
-              </View>
-            )}
-
+  // คำนวณจำนวนหน้าที่จำเป็นสำหรับรูปที่เหลือ (3 รูปต่อหน้าตามที่ต้องการ)
+  const remainingPages = Math.ceil(remainingImages.length / 3);
+  
+  // สร้าง array เพื่อรวบรวมหน้าทั้งหมด
+  const pages = [];
+  
+  // เพิ่มหน้าหลักแสดงรายละเอียดและรูปแรก
+  pages.push(
+    <Page key={`main-${damage.id}`} size="A4" style={styles.page}>
+      {/* ลายน้ำ */}
+      <View style={styles.watermark}>
+        <Text>{formData.projectName}</Text>
+        <Text style={{ fontSize: 30 }}>{formData.roomNumber}</Text>
+        <Text style={{ fontSize: 15 }}>ใช้สำหรับการรายงานความเสียหายของ {formData.projectName} - {formData.roomNumber} เท่านั้น</Text>
+      </View>
+      
+      {/* ข้อมูลหัวกระดาษ */}
+      <Text style={styles.projectHeader}>{formData.projectName}</Text>
+      <View style={styles.damagePointInfo}>
+        <Text>ชั้น {formData.floor} เลขที่ {formData.roomNumber}</Text>
+        <Text>จุดที่ {index + 1} จากทั้งหมด {formData.damages.length} จุด</Text>
+      </View>
+      
+      {/* หัวข้อความเสียหาย */}
+      <Text style={styles.damageTitle}>
+        {index + 1}. {damage.type === 'water' ? 'ระบบน้ำ' : 
+                    damage.type === 'electric' ? 'ระบบไฟฟ้า' : 
+                    damage.type === 'structural' ? 'ความเสียหายเชิงโครงสร้าง' : 'อื่นๆ'}
+      </Text>
+      
+      {/* รายละเอียดความเสียหาย */}
+      <View style={styles.damageDetailsContainer}>
+        <View style={[styles.damageDetailRow, { marginBottom: damage.type === 'structural' ? 8 : 10 }]}>
+          {damage.room && (
             <View style={styles.damageDetailHalf}>
-              <Text style={[styles.damageLabel, { marginBottom: damage.type === 'structural' ? 2 : 4 }]}>ประเภทความเสียหาย:</Text>
+              <Text style={[styles.damageLabel, { marginBottom: damage.type === 'structural' ? 2 : 4 }]}>ประเภทห้อง:</Text>
               <Text>
-                {damage.type === 'water' ? 'ระบบประปา' :
-                 damage.type === 'electric' ? 'ระบบไฟฟ้า' :
-                 damage.type === 'structural' ? 'ความเสียหายเชิงโครงสร้าง' : 'อื่นๆ'}
+                {damage.room === 'livingRoom' ? 'ห้องนั่งเล่น' : 
+                 damage.room === 'bedroom' ? 'ห้องนอน' : 
+                 damage.room === 'kitchen' ? 'ห้องครัว' : 
+                 damage.room === 'bathroom' ? 'ห้องน้ำ' : 
+                 damage.room === 'storage' ? 'ห้องเก็บของ' :
+                 damage.room === 'balcony' ? 'ระเบียง' : 
+                 damage.room === 'other' && damage.otherRoom ? damage.otherRoom : 'อื่นๆ'}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.damageDetailHalf}>
+            <Text style={[styles.damageLabel, { marginBottom: damage.type === 'structural' ? 2 : 4 }]}>ประเภทความเสียหาย:</Text>
+            <Text>
+              {damage.type === 'water' ? 'ระบบประปา' :
+               damage.type === 'electric' ? 'ระบบไฟฟ้า' :
+               damage.type === 'structural' ? 'ความเสียหายเชิงโครงสร้าง' : 'อื่นๆ'}
+            </Text>
+          </View>
+        </View>
+
+        {damage.type === 'structural' && damage.structuralDamageArea && (
+          <View style={[styles.damageDetailRow, { marginBottom: 8 }]}>
+            <View style={styles.damageDetailFull}>
+              <Text style={[styles.damageLabel, { marginBottom: 2 }]}>บริเวณจุดที่ได้รับความเสียหาย:</Text>
+              <Text>
+                {damage.structuralDamageArea === 'ceiling' ? 'ฝ้าเพดาน' :
+                 damage.structuralDamageArea === 'wall' ? 'ผนัง' :
+                 damage.structuralDamageArea === 'floor' ? 'พื้น' :
+                 damage.structuralDamageArea === 'baseboard' ? 'ขอบบัวด้านล่าง' :
+                 damage.structuralDamageArea === 'door' ? 'ประตู' :
+                 damage.structuralDamageArea === 'doorFrame' ? 'วงกบประตู' : 
+                 damage.structuralDamageArea === 'other' && damage.otherStructuralDamageArea ? damage.otherStructuralDamageArea : 'อื่นๆ'}
               </Text>
             </View>
           </View>
+        )}
 
-          {damage.type === 'structural' && damage.structuralDamageArea && (
-            <View style={[styles.damageDetailRow, { marginBottom: 8 }]}>
-              <View style={styles.damageDetailFull}>
-                <Text style={[styles.damageLabel, { marginBottom: 2 }]}>บริเวณจุดที่ได้รับความเสียหาย:</Text>
-                <Text>
-                  {damage.structuralDamageArea === 'ceiling' ? 'ฝ้าเพดาน' :
-                   damage.structuralDamageArea === 'wall' ? 'ผนัง' :
-                   damage.structuralDamageArea === 'floor' ? 'พื้น' :
-                   damage.structuralDamageArea === 'baseboard' ? 'ขอบบัวด้านล่าง' :
-                   damage.structuralDamageArea === 'door' ? 'ประตู' :
-                   damage.structuralDamageArea === 'doorFrame' ? 'วงกบประตู' : 
-                   damage.structuralDamageArea === 'other' && damage.otherStructuralDamageArea ? damage.otherStructuralDamageArea : 'อื่นๆ'}
-                </Text>
-              </View>
-            </View>
-          )}
-
-          {damage.description && (
-            <View style={[styles.damageDetailRow, { marginBottom: damage.type === 'structural' ? 8 : 10 }]}>
-              <View style={styles.damageDetailFull}>
-                <Text style={[styles.damageLabel, { marginBottom: damage.type === 'structural' ? 2 : 4 }]}>คำอธิบาย:</Text>
-                <Text>{damage.description}</Text>
-              </View>
-            </View>
-          )}
-        </View>
-        
-        {/* รูปภาพแรก */}
-        {firstImage && (
-          <View style={styles.imageContainer}>
-            <View style={styles.imageWrapper}>
-              <Image 
-                src={firstImage} 
-                style={damage.type === 'structural' ? styles.imageStructural : styles.imageSingle}
-              />
-              <Text style={styles.imageCaption}>รูปภาพที่ 1</Text>
+        {damage.description && (
+          <View style={[styles.damageDetailRow, { marginBottom: damage.type === 'structural' ? 8 : 10 }]}>
+            <View style={styles.damageDetailFull}>
+              <Text style={[styles.damageLabel, { marginBottom: damage.type === 'structural' ? 2 : 4 }]}>คำอธิบาย:</Text>
+              <Text>{damage.description}</Text>
             </View>
           </View>
         )}
-        
-        {/* แสดงเลขหน้า */}
-        <Text style={styles.paginator}>หน้า {pageNumber} / {totalPages}</Text>
-        
-        {/* ส่วนลายเซ็น */}
-        <View style={styles.signatureSection}>
-          <View style={styles.signatureRow}>
-            <View style={styles.signatureBox}>
-              <Text style={styles.signatureText}>ลงชื่อ</Text>
-              <View style={styles.signatureLine} />
-              <Text style={styles.signatureText}>({formData.residentName})</Text>
-              <Text style={styles.signatureText}>ผู้รายงานความเสียหาย</Text>
-            </View>
+      </View>
+      
+      {/* รูปภาพแรก */}
+      {firstImage && (
+        <View style={styles.imageContainer}>
+          <View style={styles.imageWrapper}>
+            <Image 
+              src={firstImage} 
+              style={damage.type === 'structural' ? styles.imageStructural : styles.imageSingle}
+            />
+            <Text style={styles.imageCaption}>รูปภาพที่ 1</Text>
           </View>
         </View>
-      </Page>
-
-      {/* หน้าสำหรับรูปภาพที่เหลือ */}
-      {remainingImages.map((image, imgIndex) => {
-        const pageIndex = Math.floor(imgIndex / 4);
-        const isFirstImageInPage = imgIndex % 4 === 0;
-
-        if (isFirstImageInPage) {
-          return (
-            <Page key={imgIndex} size="A4" style={styles.page}>
-              {/* ลายน้ำ */}
-              <View style={styles.watermark}>
-                <Text>{formData.projectName}</Text>
-                <Text style={{ fontSize: 30 }}>{formData.roomNumber}</Text>
-                <Text style={{ fontSize: 15 }}>ใช้สำหรับการรายงานความเสียหายของ {formData.projectName} - {formData.roomNumber} เท่านั้น</Text>
-              </View>
-
-              {/* ข้อมูลหัวกระดาษ */}
-              <View style={styles.damagePointInfo}>
-                <Text>ห้องชุดเลขที่ {formData.roomNumber}</Text>
-                <Text>จุดที่ {index + 1} จากทั้งหมด {formData.damages.length} จุด</Text>
-                <Text>รูปภาพเพิ่มเติม</Text>
-              </View>
-
-              {/* รูปภาพ (สูงสุด 4 รูปต่อหน้า) */}
-              <View style={styles.imageContainer}>
-                {remainingImages.slice(imgIndex, imgIndex + 4).map((img, idx) => (
-                  <View key={idx} style={styles.imageWrapper}>
-                    <Image 
-                      src={img} 
-                      style={styles.image}
-                    />
-                    <Text style={styles.imageCaption}>รูปภาพที่ {imgIndex + idx + 2}</Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* แสดงเลขหน้า */}
-              <Text style={styles.paginator}>หน้า {pageNumber + pageIndex + 1} / {totalPages}</Text>
-            </Page>
-          );
-        }
-        return null;
-      })}
-    </>
+      )}
+      
+      {/* แสดงเลขหน้า */}
+      <Text style={styles.paginator}>หน้า {pageNumber} / {totalPages}</Text>
+      
+      {/* ส่วนลายเซ็น */}
+      <View style={styles.signatureSection}>
+        <View style={styles.signatureRow}>
+          <View style={styles.signatureBox}>
+            <Text style={styles.signatureText}>ลงชื่อ</Text>
+            <View style={styles.signatureLine} />
+            <Text style={styles.signatureText}>({formData.residentName})</Text>
+            <Text style={styles.signatureText}>ผู้รายงานความเสียหาย</Text>
+          </View>
+        </View>
+      </View>
+    </Page>
   );
+
+  // สร้างหน้ารูปภาพเพิ่มเติม
+  for (let pageIdx = 0; pageIdx < remainingPages; pageIdx++) {
+    const startImageIdx = pageIdx * 3;
+    const imagesForPage = remainingImages.slice(startImageIdx, startImageIdx + 3);
+    
+    if (imagesForPage.length > 0) {
+      pages.push(
+        <Page key={`images-${damage.id}-${pageIdx}`} size="A4" style={styles.page}>
+          {/* ลายน้ำ */}
+          <View style={styles.watermark}>
+            <Text>{formData.projectName}</Text>
+            <Text style={{ fontSize: 30 }}>{formData.roomNumber}</Text>
+            <Text style={{ fontSize: 15 }}>ใช้สำหรับการรายงานความเสียหายของ {formData.projectName} - {formData.roomNumber} เท่านั้น</Text>
+          </View>
+
+          {/* ข้อมูลหัวกระดาษ */}
+          <Text style={styles.projectHeader}>{formData.projectName}</Text>
+          <View style={styles.damagePointInfo}>
+            <Text>ชั้น {formData.floor} เลขที่ {formData.roomNumber}</Text>
+            <Text>จุดที่ {index + 1} จากทั้งหมด {formData.damages.length} จุด</Text>
+            <Text>รูปภาพเพิ่มเติม</Text>
+          </View>
+
+          {/* รูปภาพ (3 รูปต่อหน้า) */}
+          <View style={styles.imageContainer}>
+            {imagesForPage.map((img, idx) => (
+              <View key={idx} style={styles.imageWrapper}>
+                <Image 
+                  src={img} 
+                  style={styles.image}
+                />
+                <Text style={styles.imageCaption}>รูปภาพที่ {startImageIdx + idx + 2}</Text>
+              </View>
+            ))}
+          </View>
+
+          {/* แสดงเลขหน้า */}
+          <Text style={styles.paginator}>หน้า {pageNumber + pageIdx + 1} / {totalPages}</Text>
+        </Page>
+      );
+    }
+  }
+  
+  return <>{pages}</>;
 };
 
 // เพิ่มฟังก์ชันตรวจสอบ Safari browser
@@ -515,15 +532,45 @@ const isSafari = () => {
 // สร้างเอกสาร PDF
 export const generatePdf = async (formData: FormData, processedImages: { id: string; damageId: string; base64: string }[]): Promise<{ url: string; filename: string }> => {
   try {
+    // ข้อมูลหน้าสำหรับแต่ละ damage
+    const damagePageInfo: { damageId: string; mainPage: number; additionalPages: number }[] = [];
+    let currentPage = 2; // เริ่มจากหน้า 2 (หน้าแรกคือ InfoPage)
+    
+    // คำนวณจำนวนหน้าและเลขหน้าแรกของแต่ละ damage
+    formData.damages.forEach(damage => {
+      const damageImages = processedImages.filter(img => img.damageId === damage.id);
+      const additionalPages = damageImages.length > 1 
+        ? Math.ceil((damageImages.length - 1) / 3) 
+        : 0;
+        
+      damagePageInfo.push({
+        damageId: damage.id,
+        mainPage: currentPage,
+        additionalPages: additionalPages
+      });
+      
+      // เพิ่มหน้าสำหรับ damage นี้ (1 หน้าหลัก + N หน้ารูปภาพเพิ่มเติม)
+      currentPage += 1 + additionalPages;
+    });
+    
+    // จำนวนหน้าทั้งหมด = หน้าแรก (InfoPage) + หน้า damage ทั้งหมด
+    const totalPages = currentPage - 1;
+    
     // สร้าง Document จาก React Components
     const pdfDocument = (
       <Document>
-        <InfoPage formData={formData} pageNumber={1} totalPages={formData.damages.length + 1} />
+        <InfoPage formData={formData} pageNumber={1} totalPages={totalPages} />
         
         {formData.damages.map((damage, index) => {
+          const pageInfo = damagePageInfo.find(info => info.damageId === damage.id);
           const damageImages = processedImages
             .filter(img => img.damageId === damage.id)
             .map(img => img.base64);
+          
+          if (!pageInfo) {
+            console.error(`No page info found for damage ${damage.id}`);
+            return null;
+          }
           
           return (
             <DamagePage 
@@ -532,8 +579,8 @@ export const generatePdf = async (formData: FormData, processedImages: { id: str
               index={index}
               formData={formData}
               damageImages={damageImages}
-              pageNumber={index + 2}
-              totalPages={formData.damages.length + 1}
+              pageNumber={pageInfo.mainPage}
+              totalPages={totalPages}
             />
           );
         })}
@@ -543,8 +590,8 @@ export const generatePdf = async (formData: FormData, processedImages: { id: str
     // สร้าง PDF Blob
     const pdfBlob = await pdf(pdfDocument).toBlob();
     
-    // สร้างชื่อไฟล์ตามรูปแบบใหม่: ชื่อโครงการ_ชั้น_เลขห้อง.pdf
-    const filename = `${formData.projectName}_${formData.floor}_${formData.roomNumber}.pdf`;
+    // สร้างชื่อไฟล์ตามรูปแบบใหม่: ชื่อโครงการ_ชั้นF_เลขห้อง.pdf
+    const filename = `${formData.projectName}_${formData.floor}F_${formData.roomNumber}.pdf`;
     
     // สร้าง Blob URL
     const url = URL.createObjectURL(pdfBlob);
