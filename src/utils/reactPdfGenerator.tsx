@@ -507,18 +507,20 @@ const DamagePage = ({
   );
 };
 
+// เพิ่มฟังก์ชันตรวจสอบ Safari browser
+const isSafari = () => {
+  return /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+};
+
 // สร้างเอกสาร PDF
-export const generatePdf = async (formData: FormData, processedImages: { id: string; damageId: string; base64: string }[]): Promise<string> => {
+export const generatePdf = async (formData: FormData, processedImages: { id: string; damageId: string; base64: string }[]): Promise<{ url: string; filename: string }> => {
   try {
     // สร้าง Document จาก React Components
     const pdfDocument = (
       <Document>
-        {/* หน้าแรกแสดงข้อมูลทั่วไป */}
         <InfoPage formData={formData} pageNumber={1} totalPages={formData.damages.length + 1} />
         
-        {/* หน้าต่อไปสำหรับแต่ละจุดความเสียหาย */}
         {formData.damages.map((damage, index) => {
-          // หาภาพที่ตรงกับ damageId
           const damageImages = processedImages
             .filter(img => img.damageId === damage.id)
             .map(img => img.base64);
@@ -530,7 +532,7 @@ export const generatePdf = async (formData: FormData, processedImages: { id: str
               index={index}
               formData={formData}
               damageImages={damageImages}
-              pageNumber={index + 2} // เริ่มจากหน้า 2 (หน้าแรกเป็นข้อมูลทั่วไป)
+              pageNumber={index + 2}
               totalPages={formData.damages.length + 1}
             />
           );
@@ -541,13 +543,13 @@ export const generatePdf = async (formData: FormData, processedImages: { id: str
     // สร้าง PDF Blob
     const pdfBlob = await pdf(pdfDocument).toBlob();
     
-    // แปลง Blob เป็น Data URI
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(pdfBlob);
-    });
+    // สร้างชื่อไฟล์
+    const filename = `damage-report-${formData.roomNumber}-${new Date().toISOString().split('T')[0]}.pdf`;
+    
+    // สร้าง Blob URL
+    const url = URL.createObjectURL(pdfBlob);
+    
+    return { url, filename };
     
   } catch (error) {
     console.error('Error generating PDF with React-PDF:', error);
@@ -555,4 +557,5 @@ export const generatePdf = async (formData: FormData, processedImages: { id: str
   }
 };
 
+export { isSafari };
 export default generatePdf; 

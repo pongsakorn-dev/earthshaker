@@ -7,7 +7,7 @@ import './App.css';
 import './utils/i18n';  // Import i18n config
 import DamageForm, { AddDamageButton } from './components/DamageForm';
 import { FormData, DamageDetail, DamageType, ResidenceType, RoomType } from './types';
-import generatePdf from './utils/reactPdfGenerator';
+import generatePdf, { isSafari } from './utils/reactPdfGenerator';
 import { Input } from './components/ui/input';
 import { Button } from './components/ui/button';
 import { Label } from './components/ui/label';
@@ -313,60 +313,63 @@ function App() {
   };
   
   const handleGeneratePdf = async () => {
-    if (!validateForm()) {
-      setNotification({
-        open: true,
-        message: t('form.validationErrors'),
-        severity: 'error',
-      });
-      return;
-    }
-    
-    setLoading(true);
+    let blobUrl: string | null = null;
     
     try {
-      // แปลงรูปภาพเป็น base64 เพื่อส่งให้ generatePdf
+      // ตรวจสอบว่ามีข้อมูลครบถ้วนหรือไม่
+      if (!formData || formData.damages.length === 0) {
+        setNotification({
+          open: true,
+          message: 'กรุณากรอกข้อมูลความเสียหายอย่างน้อย 1 รายการ',
+          severity: 'error'
+        });
+        return;
+      }
+
+      // แสดง loading
+      setLoading(true);
+
+      // ประมวลผลรูปภาพ
       const processedImages = await processImages();
-      
-      // Generate PDF using React-PDF with processed images
-      const pdfDataUri = await generatePdf(formData, processedImages);
-      
-      // Check if there was an error generating PDF
-      if (!pdfDataUri) {
-        throw new Error('Failed to generate PDF');
-      }
-      
+
+      // สร้าง PDF
+      const { url, filename } = await generatePdf(formData, processedImages);
+      blobUrl = url;
+
       // ตรวจสอบว่าเป็น Safari หรือไม่
-      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      
-      if (isSafari) {
-        // สำหรับ Safari ให้ใช้ window.open
-        window.open(pdfDataUri, '_blank');
+      if (isSafari()) {
+        // สำหรับ Safari ใช้ window.location.href
+        window.location.href = url;
       } else {
-        // สำหรับเบราว์เซอร์อื่นๆ ใช้วิธีเดิม
+        // สำหรับเบราว์เซอร์อื่นๆ ใช้ <a> tag
         const link = document.createElement('a');
-        link.href = pdfDataUri;
-        link.download = `${formData.projectName}_${formData.roomNumber}_damage_report.pdf`;
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
       }
-      
-      // Show success notification
+
+      // แสดงข้อความสำเร็จ
       setNotification({
         open: true,
-        message: t('form.pdfGenerated'),
-        severity: 'success',
+        message: 'สร้าง PDF สำเร็จ',
+        severity: 'success'
       });
+
     } catch (error) {
       console.error('Error generating PDF:', error);
-      
-      // Show error notification
       setNotification({
         open: true,
-        message: t('form.pdfGenerationError'),
-        severity: 'error',
+        message: 'เกิดข้อผิดพลาดในการสร้าง PDF',
+        severity: 'error'
       });
     } finally {
       setLoading(false);
+      // Cleanup Blob URL
+      if (blobUrl) {
+        URL.revokeObjectURL(blobUrl);
+      }
     }
   };
   
