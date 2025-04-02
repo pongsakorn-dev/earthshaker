@@ -18,18 +18,6 @@ const NotFound: React.FC<NotFoundProps> = ({ projectMapping }) => {
       <Paragraph className="text-muted-foreground mb-8 text-center">
         {t('notFound.checkUrl')}
       </Paragraph>
-      <ul className="space-y-2">
-        {Object.entries(projectMapping).map(([key, name]) => (
-          <li key={key}>
-            <a 
-              href={`/${key}`} 
-              className="text-primary hover:underline transition-colors"
-            >
-              {name}
-            </a>
-          </li>
-        ))}
-      </ul>
     </Container>
   );
 };

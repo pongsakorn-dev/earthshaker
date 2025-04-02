@@ -23,6 +23,7 @@
     "otherResidenceType": "Specify Residence Type",
     "damageSection": "Plumbing and Electrical System Damage",
     "damageDescription": "Please specify any damage to the plumbing or electrical system in the unit",
+    "electricDescription": "Please specify any damage to the plumbing or electrical system in the unit",
     "structuralSection": "Structural Damage",
     "structuralDescription": "Please specify any damage to the building or structural elements of the unit",
     "crackSection": "Crack Damage",

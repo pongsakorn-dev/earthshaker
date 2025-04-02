@@ -543,8 +543,8 @@ export const generatePdf = async (formData: FormData, processedImages: { id: str
     // สร้าง PDF Blob
     const pdfBlob = await pdf(pdfDocument).toBlob();
     
-    // สร้างชื่อไฟล์
-    const filename = `damage-report-${formData.roomNumber}-${new Date().toISOString().split('T')[0]}.pdf`;
+    // สร้างชื่อไฟล์ตามรูปแบบใหม่: ชื่อโครงการ_ชั้น_เลขห้อง.pdf
+    const filename = `${formData.projectName}_${formData.floor}_${formData.roomNumber}.pdf`;
     
     // สร้าง Blob URL
     const url = URL.createObjectURL(pdfBlob);

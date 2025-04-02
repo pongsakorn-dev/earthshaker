@@ -2,6 +2,8 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { v4 as uuidv4 } from 'uuid';
 import { UserCircle2, Wrench, Building2 } from 'lucide-react';
+import heic2any from 'heic2any';
+import { heicTo, isHeic } from 'heic-to';
 
 import './App.css';
 import './utils/i18n';  // Import i18n config
@@ -19,11 +21,7 @@ import { SectionTitle } from './components/ui/typography';
 
 // Map สำหรับเก็บข้อมูลชื่อโครงการจาก URL parameter
 const projectNameMapping: Record<string, string> = {
-  'rhythm': 'Rhythm Asok',
-  'rhythm-sukhumvit': 'Rhythm Sukhumvit',
-  'rhythm-rangnam': 'Rhythm Rangnam',
-  'rhythm-phahol-ari': 'Rhythm Phahol-Ari',
-  'rhythm-ekamai': 'Rhythm Ekamai'
+  'kjkszppj': 'Rhythm Phahol-Ari',
 };
 
 function App() {
@@ -175,6 +173,7 @@ function App() {
     const newDamage: DamageDetail = {
       id: uuidv4(),
       type: 'water' as DamageType,
+      room: 'bedroom' as RoomType,
       location: '',
       description: '',
       images: [],
@@ -214,30 +213,115 @@ function App() {
   }, []);
   
   const handleAddDamageImage = useCallback((damageId: string, files: File[]) => {
-    setFormData((prev) => {
-      const updatedDamages = prev.damages.map((damage) => {
-        if (damage.id === damageId) {
-          const newImages = files.map((file) => ({
-            id: uuidv4(),
-            file,
-            name: file.name,
-            preview: URL.createObjectURL(file),
-          }));
+    const convertHeicToJpeg = async (file: File) => {
+      try {
+        // ตรวจสอบว่าไฟล์เป็น HEIC หรือไม่ โดยใช้ isHeic จาก heic-to
+        const fileIsHeic = await isHeic(file).catch(() => false);
+        
+        if (fileIsHeic) {
+          console.log(`Converting HEIC file: ${file.name} using heic-to`);
+          try {
+            // ใช้ heic-to แทน heic2any
+            const jpegBlob = await heicTo({
+              blob: file,
+              type: 'image/jpeg',
+              quality: 0.8
+            });
+            
+            // สร้าง File object ใหม่พร้อมนามสกุล .jpg
+            const newFileName = file.name.replace(/\.heic$/i, '.jpg');
+            const convertedFile = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
+            
+            console.log(`HEIC converted successfully to: ${newFileName}`);
+            return {
+              file: convertedFile,
+              preview: URL.createObjectURL(jpegBlob)
+            };
+          } catch (heicToError) {
+            console.error(`Error with heic-to conversion, trying heic2any as fallback: ${file.name}`, heicToError);
+            
+            // ใช้ heic2any เป็น fallback สำหรับไฟล์ที่ heic-to ไม่สามารถแปลงได้
+            try {
+              const jpegBlob = await heic2any({
+                blob: file,
+                toType: 'image/jpeg',
+                quality: 0.8
+              }) as Blob;
+              
+              const newFileName = file.name.replace(/\.heic$/i, '.jpg');
+              const convertedFile = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
+              
+              console.log(`HEIC converted with heic2any fallback: ${newFileName}`);
+              return {
+                file: convertedFile,
+                preview: URL.createObjectURL(jpegBlob)
+              };
+            } catch (fallbackError) {
+              console.error(`Both conversion methods failed for: ${file.name}`, fallbackError);
+              // ถ้าทั้งสองวิธีล้มเหลว ใช้ไฟล์ต้นฉบับ
+              return {
+                file: file,
+                preview: URL.createObjectURL(file)
+              };
+            }
+          }
+        }
+        
+        // สำหรับไฟล์ที่ไม่ใช่ HEIC ให้ใช้ไฟล์ต้นฉบับ
+        return {
+          file: file,
+          preview: URL.createObjectURL(file)
+        };
+      } catch (error) {
+        console.error(`Error checking or converting file: ${file.name}`, error);
+        // ถ้าเกิดข้อผิดพลาด ใช้ไฟล์ต้นฉบับ
+        return {
+          file: file,
+          preview: URL.createObjectURL(file)
+        };
+      }
+    };
+
+    // Process all files (convert if needed) and update state when all are done
+    const processFiles = async () => {
+      try {
+        const processedFiles = await Promise.all(files.map(convertHeicToJpeg));
+        
+        setFormData((prev) => {
+          const updatedDamages = prev.damages.map((damage) => {
+            if (damage.id === damageId) {
+              const newImages = processedFiles.map(({ file, preview }) => ({
+                id: uuidv4(),
+                file,
+                name: file.name,
+                preview,
+              }));
+              
+              return {
+                ...damage,
+                images: [...damage.images, ...newImages],
+              };
+            }
+            return damage;
+          });
           
           return {
-            ...damage,
-            images: [...damage.images, ...newImages],
+            ...prev,
+            damages: updatedDamages,
           };
-        }
-        return damage;
-      });
-      
-      return {
-        ...prev,
-        damages: updatedDamages,
-      };
-    });
-  }, []);
+        });
+      } catch (error) {
+        console.error('Error processing image files:', error);
+        setNotification({
+          open: true,
+          message: 'เกิดข้อผิดพลาดในการประมวลผลรูปภาพ',
+          severity: 'error'
+        });
+      }
+    };
+    
+    processFiles();
+  }, [setFormData, setNotification]);
   
   const handleDeleteDamageImage = useCallback((damageId: string, imageId: string) => {
     setFormData((prev) => {
@@ -290,11 +374,53 @@ function App() {
       for (const img of damage.images) {
         if (img.file) {
           try {
+            // ตรวจสอบและแปลงไฟล์ HEIC เป็น JPEG ก่อนแปลงเป็น base64
+            let fileToProcess = img.file;
+            
+            // ตรวจสอบว่าเป็นไฟล์ HEIC หรือไม่
+            const fileIsHeic = await isHeic(img.file).catch(() => false);
+            
+            if (fileIsHeic) {
+              console.log(`Converting HEIC to JPEG before processing to base64: ${img.file.name}`);
+              try {
+                // ใช้ heic-to แปลงเป็น JPEG
+                const jpegBlob = await heicTo({
+                  blob: img.file,
+                  type: 'image/jpeg',
+                  quality: 0.8
+                });
+                
+                const newFileName = img.file.name.replace(/\.heic$/i, '.jpg');
+                fileToProcess = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
+                console.log(`HEIC converted successfully before base64 conversion: ${newFileName}`);
+              } catch (heicToError) {
+                console.error(`Error with heic-to conversion before base64, trying heic2any: ${img.file.name}`, heicToError);
+                
+                // ใช้ heic2any เป็น fallback
+                try {
+                  const jpegBlob = await heic2any({
+                    blob: img.file,
+                    toType: 'image/jpeg',
+                    quality: 0.8
+                  }) as Blob;
+                  
+                  const newFileName = img.file.name.replace(/\.heic$/i, '.jpg');
+                  fileToProcess = new File([jpegBlob], newFileName, { type: 'image/jpeg' });
+                  console.log(`HEIC converted with heic2any before base64: ${newFileName}`);
+                } catch (fallbackError) {
+                  console.error(`Both conversion methods failed before base64: ${img.file.name}`, fallbackError);
+                  // ใช้ไฟล์เดิมถ้าแปลงไม่สำเร็จ
+                  fileToProcess = img.file;
+                }
+              }
+            }
+            
+            // แปลงไฟล์เป็น base64
             const base64String = await new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result as string);
               reader.onerror = reject;
-              reader.readAsDataURL(img.file as Blob);
+              reader.readAsDataURL(fileToProcess);
             });
             
             processedImages.push({
@@ -312,15 +438,17 @@ function App() {
     return processedImages;
   };
   
+  const [pdfUrl, setPdfUrl] = useState<{ url: string; filename: string } | null>(null);
+  
   const handleGeneratePdf = async () => {
     let blobUrl: string | null = null;
     
     try {
       // ตรวจสอบว่ามีข้อมูลครบถ้วนหรือไม่
-      if (!formData || formData.damages.length === 0) {
+      if (!validateForm()) {
         setNotification({
           open: true,
-          message: 'กรุณากรอกข้อมูลความเสียหายอย่างน้อย 1 รายการ',
+          message: 'กรุณากรอกข้อมูลให้ครบถ้วน',
           severity: 'error'
         });
         return;
@@ -335,25 +463,23 @@ function App() {
       // สร้าง PDF
       const { url, filename } = await generatePdf(formData, processedImages);
       blobUrl = url;
+      
+      // เก็บ URL สำหรับแสดง Link ดาวน์โหลด
+      setPdfUrl({ url, filename });
 
-      // ตรวจสอบว่าเป็น Safari หรือไม่
-      if (isSafari()) {
-        // สำหรับ Safari ใช้ window.location.href
-        window.location.href = url;
-      } else {
-        // สำหรับเบราว์เซอร์อื่นๆ ใช้ <a> tag
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      }
+      // ดาวน์โหลด PDF โดยอัตโนมัติ
+      const downloadLink = document.createElement('a');
+      downloadLink.href = url;
+      downloadLink.download = filename;
+      downloadLink.style.display = 'none';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
 
-      // แสดงข้อความสำเร็จ
+      // แสดงข้อความสำเร็จพร้อมคำแนะนำ
       setNotification({
         open: true,
-        message: 'สร้าง PDF สำเร็จ',
+        message: 'สร้าง PDF สำเร็จ ระบบกำลังดาวน์โหลดไฟล์อัตโนมัติ หากไม่มีการดาวน์โหลด กรุณาคลิกที่ลิงก์ด้านล่าง',
         severity: 'success'
       });
 
@@ -364,14 +490,21 @@ function App() {
         message: 'เกิดข้อผิดพลาดในการสร้าง PDF',
         severity: 'error'
       });
+      // ล้าง URL เมื่อเกิดข้อผิดพลาด
+      setPdfUrl(null);
     } finally {
       setLoading(false);
-      // Cleanup Blob URL
-      if (blobUrl) {
-        URL.revokeObjectURL(blobUrl);
-      }
     }
   };
+  
+  // เพิ่มฟังก์ชันสำหรับ cleanup URL เมื่อ component unmount
+  useEffect(() => {
+    return () => {
+      if (pdfUrl?.url) {
+        URL.revokeObjectURL(pdfUrl.url);
+      }
+    };
+  }, [pdfUrl]);
   
   if (projectNotFound) {
     return <NotFound projectMapping={projectNameMapping} />;
@@ -566,7 +699,22 @@ function App() {
       {/* Separator */}
       <div className="w-full h-[1px] bg-border my-8" />
       
-      <div className="w-full mt-8 flex justify-center">
+      <div className="w-full mt-8 flex flex-col gap-4">
+        {/* แสดง Link ดาวน์โหลดหลังจากสร้าง PDF */}
+        {pdfUrl && (
+          <div className="p-4 bg-muted rounded-lg">
+            <p className="mb-2 text-muted-foreground">หากไม่มีการดาวน์โหลดอัตโนมัติ คลิกที่ลิงก์ด้านล่าง:</p>
+            <a
+              href={pdfUrl.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline font-medium"
+            >
+              ดาวน์โหลด PDF ({pdfUrl.filename})
+            </a>
+          </div>
+        )}
+
         <Button
           onClick={handleGeneratePdf}
           disabled={loading}
