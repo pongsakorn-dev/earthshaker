@@ -17,7 +17,6 @@
     "residenceTypeOptions": {
       "owner": "เจ้าของห้อง",
       "renter": "ผู้เช่า",
-      "company": "บริษัท",
       "other": "อื่นๆ"
     },
     "otherResidenceType": "ระบุประเภทผู้พักอาศัย",

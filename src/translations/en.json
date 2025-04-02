@@ -17,7 +17,6 @@
     "residenceTypeOptions": {
       "owner": "Owner",
       "renter": "Renter",
-      "company": "Company",
       "other": "Other"
     },
     "otherResidenceType": "Specify Residence Type",

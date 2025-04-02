@@ -68,16 +68,7 @@ function App() {
     residenceType: 'owner' as ResidenceType,
     otherResidenceType: '',
     projectName: '',
-    damages: [
-      {
-        id: uuidv4(),
-        type: 'water' as DamageType,
-        room: 'bedroom' as RoomType,
-        location: '',
-        description: '',
-        images: [],
-      }
-    ],
+    damages: [],
   } as FormData);
 
   const [errors, setErrors] = useState({
@@ -115,7 +106,8 @@ function App() {
     setErrors(newErrors);
     
     // Check if all damage entries have required fields
-    const allDamagesValid = formData.damages.every(
+    // ถ้าไม่มีรายการความเสียหาย ก็ถือว่าผ่านการตรวจสอบในส่วนนี้
+    const allDamagesValid = formData.damages.length === 0 || formData.damages.every(
       (damage) => {
         // ตรวจสอบ room สำหรับทุกประเภทความเสียหาย
         const hasRoom = damage.room && (damage.room !== 'other' || (damage.room === 'other' && damage.otherRoom?.trim()));
@@ -137,8 +129,7 @@ function App() {
            !newErrors.floor &&
            !newErrors.phoneNumber &&
            !newErrors.email &&
-           allDamagesValid && 
-           formData.damages.length > 0;
+           allDamagesValid;
   };
   
   const handleTextChange = (field: keyof FormData, value: string) => {
@@ -608,7 +599,7 @@ function App() {
               </Label>
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-6">
-                  {['owner', 'renter', 'company', 'other'].map((type) => (
+                  {['owner', 'renter', 'other'].map((type) => (
                     <div key={type} className="flex items-center space-x-2">
                       <input
                         type="radio"
@@ -652,18 +643,28 @@ function App() {
         </div>
         <p className="text-sm text-muted-foreground mb-4">{t('form.electricDescription')}</p>
         
-        {formData.damages.filter(damage => damage.type === 'water' || damage.type === 'electric').map((damage, index) => (
-          <DamageForm
-            key={damage.id}
-            damage={damage}
-            onUpdate={handleUpdateDamage}
-            onDelete={handleDeleteDamage}
-            onAddImage={handleAddDamageImage}
-            onDeleteImage={handleDeleteDamageImage}
-            index={index}
-            isStructural={false}
-          />
-        ))}
+        {formData.damages.filter(damage => damage.type === 'water' || damage.type === 'electric').length > 0 ? (
+          // มีรายการความเสียหายระบบประปาหรือไฟฟ้า
+          formData.damages.filter(damage => damage.type === 'water' || damage.type === 'electric').map((damage, index) => (
+            <DamageForm
+              key={damage.id}
+              damage={damage}
+              onUpdate={handleUpdateDamage}
+              onDelete={handleDeleteDamage}
+              onAddImage={handleAddDamageImage}
+              onDeleteImage={handleDeleteDamageImage}
+              index={index}
+              isStructural={false}
+            />
+          ))
+        ) : (
+          // ไม่มีรายการความเสียหาย แสดงข้อความแนะนำ
+          <div className="p-4 bg-muted rounded-lg mb-4 text-center">
+            <p className="text-muted-foreground">
+              ยังไม่มีรายการความเสียหายระบบประปาหรือไฟฟ้า กดปุ่มด้านล่างเพื่อเพิ่มรายการ
+            </p>
+          </div>
+        )}
         
         <AddDamageButton onAddDamage={handleAddDamage} />
       </FormSection>
@@ -678,18 +679,28 @@ function App() {
         </div>
         <p className="text-sm text-muted-foreground mb-4">{t('form.structuralDescription')}</p>
         
-        {formData.damages.filter(damage => damage.type === 'structural').map((damage, index) => (
-          <DamageForm
-            key={damage.id}
-            damage={damage}
-            onUpdate={handleUpdateDamage}
-            onDelete={handleDeleteDamage}
-            onAddImage={handleAddDamageImage}
-            onDeleteImage={handleDeleteDamageImage}
-            index={index}
-            isStructural={true}
-          />
-        ))}
+        {formData.damages.filter(damage => damage.type === 'structural').length > 0 ? (
+          // มีรายการความเสียหายโครงสร้าง
+          formData.damages.filter(damage => damage.type === 'structural').map((damage, index) => (
+            <DamageForm
+              key={damage.id}
+              damage={damage}
+              onUpdate={handleUpdateDamage}
+              onDelete={handleDeleteDamage}
+              onAddImage={handleAddDamageImage}
+              onDeleteImage={handleDeleteDamageImage}
+              index={index}
+              isStructural={true}
+            />
+          ))
+        ) : (
+          // ไม่มีรายการความเสียหาย แสดงข้อความแนะนำ
+          <div className="p-4 bg-muted rounded-lg mb-4 text-center">
+            <p className="text-muted-foreground">
+              ยังไม่มีรายการความเสียหายโครงสร้าง กดปุ่มด้านล่างเพื่อเพิ่มรายการ
+            </p>
+          </div>
+        )}
         
         <Button variant="outline" onClick={handleAddCrack} className="w-full border-primary text-primary">
           + {t('form.addStructural')}
