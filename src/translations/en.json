@@ -52,7 +52,7 @@
     "specifyArea": "Specify Damaged Area",
     "reportDate": "Report Date",
     "characters": "characters",
-    "limitedTo3Lines": "Limited to 3 lines in PDF report"
+    "limitedTo3Lines": "Limited to 4 lines in PDF report"
   },
   "language": {
     "english": "English",
