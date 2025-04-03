@@ -87,7 +87,7 @@
   },
   "notFound": {
     "projectNotFound": "The project you're looking for doesn't exist in our system.",
-    "checkUrl": "Please check the URL again or select a project from the list below."
+    "checkUrl": "Please check the URL again."
   },
   "Select Room": "Select Room",
   "Select Area": "Select Area",
