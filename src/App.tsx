@@ -33,7 +33,7 @@ function formatDateForInput(date: Date): string {
 
 // Map สำหรับเก็บข้อมูลชื่อโครงการจาก URL parameter
 const projectNameMapping: Record<string, string> = {
-  'kjkszppj': 'Rhythm Phahol-Ari',
+  'kjkszppj': 'Rhythm Phahon-Ari',
 };
 
 function App() {
