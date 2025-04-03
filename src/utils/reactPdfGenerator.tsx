@@ -332,7 +332,12 @@ const InfoPage = ({ formData, pageNumber, totalPages }: { formData: FormData, pa
         
         <View style={styles.infoRowHalf}>
           <Text style={styles.infoLabel}>ประเภทที่พักอาศัย:</Text>
-          <Text>{formData.residenceType === 'owner' ? 'เจ้าของห้อง' : 'ผู้เช่า'}</Text>
+          <Text>
+            {formData.residenceType === 'owner' ? 'เจ้าของห้อง' : 
+             formData.residenceType === 'renter' ? 'ผู้เช่า' :
+             formData.residenceType === 'company' ? 'นิติบุคคล' :
+             formData.residenceType === 'other' && formData.otherResidenceType ? formData.otherResidenceType : 'อื่นๆ'}
+          </Text>
         </View>
       </View>
 
