@@ -38,6 +38,8 @@ const DamageForm: React.FC<DamageFormProps> = ({
   const { t: originalT } = useTranslation();
   const t = originalT as unknown as (key: string, options?: any) => string;
   
+  const MAX_DESCRIPTION_LENGTH = 400;
+  
   const handleDamageTypeChange = (type: DamageType, checked: boolean) => {
     onUpdate(damage.id, { 
       type: checked ? type : 'other',
@@ -189,9 +191,22 @@ const DamageForm: React.FC<DamageFormProps> = ({
             <Textarea
               id={`description-${damage.id}`}
               value={damage.description}
-              onChange={(e) => onUpdate(damage.id, { description: e.target.value })}
+              onChange={(e) => {
+                const newValue = e.target.value.slice(0, MAX_DESCRIPTION_LENGTH);
+                onUpdate(damage.id, { description: newValue });
+              }}
               rows={3}
+              maxLength={MAX_DESCRIPTION_LENGTH}
+              placeholder={t('form.damageDescription')}
             />
+            <div className="flex justify-between text-sm">
+              <div className="text-muted-foreground">
+                {t('form.limitedTo3Lines')}
+              </div>
+              <div className={`${damage.description && damage.description.length >= MAX_DESCRIPTION_LENGTH ? 'text-destructive' : 'text-muted-foreground'}`}>
+                {damage.description ? damage.description.length : 0}/{MAX_DESCRIPTION_LENGTH} {t('form.characters')}
+              </div>
+            </div>
           </div>
         </div>
         

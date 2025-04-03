@@ -50,7 +50,9 @@
     "structuralDamageArea": "Damaged Area",
     "specifyRoom": "Specify Room",
     "specifyArea": "Specify Damaged Area",
-    "reportDate": "Report Date"
+    "reportDate": "Report Date",
+    "characters": "characters",
+    "limitedTo3Lines": "Limited to 3 lines in PDF report"
   },
   "language": {
     "english": "English",

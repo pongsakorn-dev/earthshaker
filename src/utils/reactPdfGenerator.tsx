@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     fontFamily: 'THSarabunNew',
     fontWeight: 'bold',
     textAlign: 'center',
-    marginBottom: 15,
+    marginBottom: 5,
     color: '#3f51b5',
   },
   roomNumber: {
@@ -86,8 +86,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     backgroundColor: '#f5f5f5',
-    padding: 12,
-    marginBottom: 20,
+    padding: 6,
+    marginBottom: 10,
     borderRadius: 4,
   },
   infoSection: {
@@ -278,6 +278,24 @@ const styles = StyleSheet.create({
     color: '#3f51b5',
     marginBottom: 5,
   },
+  projectBox: {
+    marginTop: 0,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: '#3f51b5',
+    padding: 2,
+    backgroundColor: '#f5f8ff',
+    alignSelf: 'center',
+    textAlign: 'center',
+    width: '60%',
+  },
+  projectBoxText: {
+    fontSize: 24,
+    color: '#3f51b5',
+    textAlign: 'center',
+    fontFamily: 'THSarabunNew',
+    fontWeight: 'bold',
+  },
 });
 
 // สร้างหน้า PDF สำหรับข้อมูลทั่วไป
@@ -292,7 +310,16 @@ const InfoPage = ({ formData, pageNumber, totalPages }: { formData: FormData, pa
     
     {/* หัวข้อ */}
     <Text style={styles.projectHeader}>{formData.projectName}</Text>
+    
+    {/* บันทึกความเสียหายของห้องชุด */}
     <Text style={styles.header}>บันทึกความเสียหายของห้องชุด</Text>
+    
+    {/* กล่องแสดงชื่อโครงการ */}
+    <View style={styles.projectBox}>
+      <Text style={styles.projectBoxText}>{formData.projectName}</Text>
+    </View>
+    
+    {/* เลขห้อง */}
     <Text style={styles.roomNumber}>ชั้น {formData.floor} เลขที่ {formData.roomNumber}</Text>
     
     {/* ข้อมูลผู้อยู่อาศัย */}

@@ -48,7 +48,9 @@
     "structuralDamageArea": "บริเวณที่ได้รับความเสียหาย",
     "specifyRoom": "ระบุห้อง",
     "specifyArea": "ระบุบริเวณที่ได้รับความเสียหาย",
-    "reportDate": "วันที่รายงาน"
+    "reportDate": "วันที่รายงาน",
+    "characters": "ตัวอักษร",
+    "limitedTo3Lines": "จำกัด 3 บรรทัดในรายงาน PDF"
   },
   "language": {
     "english": "English",
