@@ -113,7 +113,7 @@ function App() {
       residentName: !formData.residentName.trim(),
       floor: !formData.floor.trim(),
       phoneNumber: !formData.phoneNumber.trim(),
-      email: !formData.email.trim(),
+      email: false,
     };
     
     setErrors(newErrors);
@@ -141,7 +141,6 @@ function App() {
            !newErrors.residentName && 
            !newErrors.floor &&
            !newErrors.phoneNumber &&
-           !newErrors.email &&
            allDamagesValid;
   };
   
@@ -158,7 +157,7 @@ function App() {
       }));
     }
 
-    if (field === 'floor' || field === 'phoneNumber' || field === 'email') {
+    if (field === 'floor' || field === 'phoneNumber') {
       setErrors((prev) => ({
         ...prev,
         [field]: !value.trim(),
@@ -614,13 +613,12 @@ function App() {
 
               <FormField>
                 <Label htmlFor="email" className="font-medium">
-                  {t('form.email')} <span className="text-destructive">*</span>
+                  {t('form.email')}
                 </Label>
                 <Input
                   id="email"
                   value={formData.email}
                   onChange={(e) => handleTextChange('email', e.target.value)}
-                  className={errors.email ? "border-destructive" : ""}
                 />
               </FormField>
             </div>

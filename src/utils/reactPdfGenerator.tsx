@@ -349,7 +349,7 @@ const InfoPage = ({ formData, pageNumber, totalPages }: { formData: FormData, pa
         
         <View style={styles.infoRowHalf}>
           <Text style={styles.infoLabel}>อีเมล:</Text>
-          <Text>{formData.email}</Text>
+          <Text>{formData.email ? formData.email : "-"}</Text>
         </View>
       </View>
     </View>
