@@ -53,9 +53,15 @@ function App() {
   });
   
   // ฟังก์ชันสำหรับดึงชื่อโครงการจาก URL parameter
-  const getProjectNameFromURL = (): { name: string, key: string } | null => {
+  const getProjectNameFromURL = (): { name: string, key: string } | null | 'root' => {
     // ดึง pathname จาก URL ปัจจุบัน
     const pathname = window.location.pathname;
+    
+    // ถ้าเป็น URL พื้นฐาน (/ หรือ ว่าง) ให้ส่งค่าพิเศษ 'root' เพื่อระบุว่าเป็น URL พื้นฐาน
+    if (pathname === '/' || pathname === '') {
+      return 'root';
+    }
+    
     // ลบ / ออกและดึงเฉพาะส่วนที่ต้องการ
     const key = pathname.split('/').filter(Boolean)[0];
     
@@ -90,22 +96,34 @@ function App() {
     floor: false,
     phoneNumber: false,
     email: false,
+    projectName: false,
   });
   
   // อัพเดทชื่อโครงการเมื่อ URL เปลี่ยน
   useEffect(() => {
     const project = getProjectNameFromURL();
     
-    if (project) {
+    if (project === 'root') {
+      // กรณีเป็น URL พื้นฐาน (/ หรือ ว่าง) ให้แสดงหน้าปกติและให้ผู้ใช้กรอกชื่อโครงการเอง
+      setProjectNotFound(false);
+    } else if (project) {
+      // กรณีพบโครงการจาก URL
       setFormData(prev => ({
         ...prev,
         projectName: project.name
       }));
       setProjectNotFound(false);
     } else {
+      // กรณีมีพารามิเตอร์ใน URL แต่ไม่พบในฐานข้อมูล ให้แสดงหน้า NotFound
       setProjectNotFound(true);
     }
   }, []);
+  
+  // เพิ่มฟังก์ชันสำหรับตรวจสอบว่าต้องแสดงฟิลด์ชื่อโครงการให้ผู้ใช้กรอกหรือไม่
+  const shouldShowProjectNameField = (): boolean => {
+    const project = getProjectNameFromURL();
+    return project === 'root' || !project;
+  };
   
   const validateForm = (): boolean => {
     const newErrors = {
@@ -114,9 +132,13 @@ function App() {
       floor: !formData.floor.trim(),
       phoneNumber: !formData.phoneNumber.trim(),
       email: false,
+      projectName: shouldShowProjectNameField() && !formData.projectName.trim(), // เพิ่มการตรวจสอบว่าต้องกรอกชื่อโครงการหรือไม่
     };
     
-    setErrors(newErrors);
+    setErrors((prev) => ({
+      ...prev,
+      projectName: newErrors.projectName,
+    }));
     
     // Check if all damage entries have required fields
     // ถ้าไม่มีรายการความเสียหาย ก็ถือว่าผ่านการตรวจสอบในส่วนนี้
@@ -141,6 +163,7 @@ function App() {
            !newErrors.residentName && 
            !newErrors.floor &&
            !newErrors.phoneNumber &&
+           !newErrors.projectName &&
            allDamagesValid;
   };
   
@@ -519,6 +542,7 @@ function App() {
     }
   };
   
+  // ตรวจสอบหาก URL มีพารามิเตอร์แต่ไม่พบในฐานข้อมูล ให้แสดงหน้า NotFound
   if (projectNotFound) {
     return <NotFound projectMapping={projectNameMapping} />;
   }
@@ -541,6 +565,34 @@ function App() {
           <CardContent className="flex flex-col gap-6 p-4 lg:p-6">
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {shouldShowProjectNameField() ? (
+                <FormField className='col-span-1'>
+                  <Label htmlFor="projectName" className={errors.projectName ? "text-destructive" : ""}>
+                    {t('form.projectName')} <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="projectName"
+                    value={formData.projectName}
+                    onChange={(e) => handleTextChange('projectName', e.target.value)}
+                    className={errors.projectName ? "border-destructive" : ""}
+                  />
+                  {errors.projectName && (
+                    <p className="text-destructive">{t('form.requiredField')}</p>
+                  )}
+                </FormField>
+              ) : (
+                <FormField className='col-span-1'>
+                  <Label>
+                    {t('form.projectName')}
+                  </Label>
+                  <Input
+                    value={formData.projectName}
+                    readOnly
+                    className="bg-muted"
+                  />
+                </FormField>
+              )}
+
               <FormField className='col-span-1'>
                 <Label htmlFor="floor" className={errors.floor ? "text-destructive" : ""}>
                   {t('form.floor')} <span className="text-destructive">*</span>
@@ -570,21 +622,10 @@ function App() {
                   <p className="text-destructive">{t('form.requiredField')}</p>
                 )}
               </FormField>
-
-              <FormField className='col-span-1'>
-                <Label htmlFor="reportDate">
-                  <span>{t('form.reportDate', 'วันที่รายงาน')}</span>
-                </Label>
-                <DatePicker
-                  id="reportDate"
-                  value={formatDateForInput(formData.reportDate)}
-                  onChange={handleDateChange}
-                />
-              </FormField>
             </div>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <FormField>
+              <FormField className='col-span-1'>
                 <Label htmlFor="residentName" className="font-medium">
                   {t('form.residentName')} <span className="text-destructive">*</span>
                 </Label>
@@ -619,6 +660,19 @@ function App() {
                   id="email"
                   value={formData.email}
                   onChange={(e) => handleTextChange('email', e.target.value)}
+                />
+              </FormField>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <FormField className='col-span-1'>
+                <Label htmlFor="reportDate">
+                  <span>{t('form.reportDate', 'วันที่รายงาน')}</span>
+                </Label>
+                <DatePicker
+                  id="reportDate"
+                  value={formatDateForInput(formData.reportDate)}
+                  onChange={handleDateChange}
                 />
               </FormField>
             </div>
